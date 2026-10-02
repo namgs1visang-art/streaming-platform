@@ -1,0 +1,10 @@
+// 공통 도메인 모듈 (엔티티, Repository, 서비스) - 실행 jar 아님
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    runtimeOnly 'org.postgresql:postgresql'
+}

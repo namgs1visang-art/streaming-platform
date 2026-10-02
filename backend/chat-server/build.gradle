@@ -1,0 +1,7 @@
+apply plugin: 'org.springframework.boot'
+
+// 채팅 서버는 DB를 직접 쓰지 않음 (Redis만 사용) → core 의존 X
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+}

@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: admin-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/streaming
+    username: streaming
+    password: streaming
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update   # 초기 개발용. 운영 전에는 Flyway로 전환 권장
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  media:
+    rtmp-base-url: rtmp://localhost/live      # OBS "서버" 칸에 들어갈 값
+    hls-base-url: http://localhost:8080/live  # 시청 URL

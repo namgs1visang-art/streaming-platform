@@ -1,0 +1,14 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: chat-server
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:5174

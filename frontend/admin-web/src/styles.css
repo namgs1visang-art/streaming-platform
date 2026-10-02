@@ -1,0 +1,48 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; color: #1f2937; background: #fff; }
+button { font: inherit; cursor: pointer; }
+
+.layout { display: flex; min-height: 100vh; }
+
+/* 사이드바 */
+.sidebar { width: 224px; background: #141a2e; color: #cbd2e0; padding-bottom: 24px; flex-shrink: 0; }
+.logo { padding: 18px 20px; font-size: 20px; font-weight: 700; color: #5b8cff; border-bottom: 1px solid #262e47; }
+.logo span { display: block; font-size: 11px; color: #6b7690; font-weight: 400; }
+.menu-group { margin-top: 18px; }
+.menu-title { width: 100%; display: flex; justify-content: space-between; background: none; border: 0;
+  color: #fff; font-weight: 700; padding: 6px 20px; font-size: 14px; }
+.menu-item { display: block; padding: 7px 20px 7px 32px; color: #a7b0c3; text-decoration: none; font-size: 13px;
+  border-left: 1px solid #2f3854; margin-left: 14px; }
+.menu-item:hover { color: #fff; }
+.menu-item.active { color: #fff; font-weight: 600; }
+
+/* 본문 */
+.content { flex: 1; min-width: 0; }
+.topbar { height: 48px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: flex-end;
+  align-items: center; gap: 24px; padding: 0 24px; font-size: 13px; color: #374151; }
+.page { padding: 24px 32px; }
+h2 { margin: 0 0 16px; font-size: 20px; }
+
+.card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.form-row input, .form-row select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; min-width: 160px; }
+.check { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+
+button { background: #3b6cf6; color: #fff; border: 0; border-radius: 6px; padding: 8px 14px; }
+button.ghost { background: #fff; color: #374151; border: 1px solid #d1d5db; padding: 5px 10px; font-size: 12px; }
+button.danger { color: #dc2626; }
+
+.toolbar { display: flex; align-items: center; gap: 12px; margin: 16px 0 8px; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { border-bottom: 1px solid #eef0f3; padding: 10px 8px; text-align: left; }
+.table th { background: #f8f9fb; font-weight: 600; color: #4b5563; }
+.mono { font-family: Consolas, monospace; font-size: 12px; cursor: pointer; }
+.actions { white-space: nowrap; display: flex; gap: 4px; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: #e5e7eb; color: #4b5563; }
+.badge.live { background: #fee2e2; color: #dc2626; font-weight: 700; }
+
+.muted { color: #9ca3af; font-size: 13px; }
+.center { text-align: center; }
+.error { color: #dc2626; font-size: 13px; }

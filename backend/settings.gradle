@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'streaming-backend'
+
+include 'core'
+include 'admin-api'
+include 'viewer-api'
+include 'chat-server'

@@ -1,0 +1,57 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background: #0e0f13; color: #e5e7eb; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+
+.header { height: 56px; display: flex; align-items: center; gap: 32px; padding: 0 24px;
+  background: #16181f; border-bottom: 1px solid #262833; }
+.brand { font-weight: 800; color: #00e09e; font-size: 20px; }
+.header nav { display: flex; gap: 20px; }
+.header nav a { color: #9ca3af; }
+.header nav a.active { color: #fff; font-weight: 700; }
+
+.container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.muted { color: #6b7280; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.tile { background: #16181f; border-radius: 10px; overflow: hidden; }
+.tile.off { opacity: .55; }
+.thumb { aspect-ratio: 16/9; background: #23262f; display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 10px; font-size: 12px; color: #9ca3af; }
+.tile-body { padding: 10px 12px; }
+.tile-body p { margin: 4px 0 0; font-size: 13px; color: #9ca3af; }
+.live { background: #ff3b3b; color: #fff; font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+.viewers { background: rgba(0,0,0,.6); padding: 2px 6px; border-radius: 4px; color: #fff; }
+
+/* 시청 화면 */
+.watch { display: flex; height: calc(100vh - 56px); }
+.player-area { flex: 1; min-width: 0; padding: 16px; overflow-y: auto; }
+.video, .offline { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; }
+.offline { display: flex; align-items: center; justify-content: center; color: #6b7280; }
+.info h3 { margin: 12px 0 4px; display: flex; gap: 8px; align-items: center; }
+
+.chat { width: 340px; display: flex; flex-direction: column; background: #16181f; border-left: 1px solid #262833; }
+.chat-head { padding: 14px; border-bottom: 1px solid #262833; font-weight: 700; }
+.chat-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 10px 14px; font-size: 14px; }
+.chat-list li { padding: 3px 0; word-break: break-all; }
+.chat-list li b { color: #00e09e; margin-right: 4px; }
+.chat-list li.system { color: #fbbf24; }
+.chat-form { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #262833; }
+.chat-form input { flex: 1; background: #23262f; border: 0; border-radius: 6px; padding: 10px; color: #fff; }
+.chat-form button, .quiz-option { background: #00e09e; color: #0e0f13; border: 0; border-radius: 6px; padding: 0 14px; font-weight: 700; }
+.chat-form button:disabled { opacity: .4; }
+
+.quiz { margin: 10px; padding: 12px; background: #1f2a44; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
+.quiz-option { padding: 8px; text-align: left; }
+
+/* 편성표 */
+.board { display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; }
+.board-col { min-width: 220px; background: #16181f; border-radius: 8px; padding: 12px; }
+.board-title { display: block; font-weight: 700; margin-bottom: 10px; color: #00e09e; }
+.board-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid #262833; font-size: 13px; }
+.board-item span { color: #9ca3af; }
+
+@media (max-width: 900px) {
+  .watch { flex-direction: column; height: auto; }
+  .chat { width: 100%; height: 420px; border-left: 0; }
+}

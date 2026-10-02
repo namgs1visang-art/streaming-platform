@@ -1,0 +1,52 @@
+name: streaming-platform
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: sp-postgres
+    environment:
+      POSTGRES_DB: streaming
+      POSTGRES_USER: streaming
+      POSTGRES_PASSWORD: streaming
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: sp-redis
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:latest
+    container_name: sp-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # 웹 콘솔
+    volumes:
+      - minio-data:/data
+
+  srs:
+    image: ossrs/srs:6
+    container_name: sp-srs
+    command: ["./objs/srs", "-c", "conf/custom.conf"]
+    ports:
+      - "1935:1935"   # RTMP (OBS 송출)
+      - "1985:1985"   # HTTP API (모니터링)
+      - "8080:8080"   # HTTP 서버 (HLS 재생)
+    volumes:
+      - ./srs/srs.conf:/usr/local/srs/conf/custom.conf
+      - ./srs/dvr:/usr/local/srs/objs/nginx/html/dvr
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # 컨테이너 → 내 PC의 Spring Boot 호출용
+
+volumes:
+  postgres-data:
+  minio-data:

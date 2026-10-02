@@ -1,0 +1,18 @@
+# backend
+backend/.gradle/
+backend/**/build/
+*.class
+
+# frontend
+node_modules/
+dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# infra
+infra/srs/dvr/
+
+.DS_Store
