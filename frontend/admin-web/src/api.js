@@ -1,4 +1,4 @@
-// admin-api(8081) 호출. 개발 중에는 vite proxy 로 /api/admin → 8081
+// admin-api(8091) 호출. 개발 중에는 vite proxy 로 /api/admin → 8091
 async function request(method, url, body) {
   const res = await fetch(url, {
     method,

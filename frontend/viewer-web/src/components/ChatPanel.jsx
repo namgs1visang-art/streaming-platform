@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Client } from '@stomp/stompjs'
 
-const WS_URL = import.meta.env.VITE_CHAT_WS_URL || 'ws://localhost:8083/ws'
+const WS_URL = import.meta.env.VITE_CHAT_WS_URL || 'ws://localhost:8093/ws'
 const randomNick = () => '시청자' + Math.floor(Math.random() * 9000 + 1000)
 
 /**
