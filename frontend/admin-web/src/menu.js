@@ -12,13 +12,14 @@ export const MENU = [
   {
     group: '퀴즈 관리',
     items: [
-      { path: '/quiz/questions', label: '퀴즈 관리' },
-      { path: '/quiz/programming', label: '편성 퀴즈 관리' },
+      { path: '/quiz/questions', label: '퀴즈 관리', ready: true },
+      { path: '/quiz/programming', label: '편성 퀴즈 관리', ready: true },
     ],
   },
   {
     group: 'VOD',
     items: [
+      { path: '/vod/recordings', label: '방송 녹화 관리', ready: true },
       { path: '/vod/contents', label: '콘텐츠 관리' },
       { path: '/vod/profiles', label: '프로파일 관리' },
       { path: '/vod/packaging', label: '패키징 채널 관리' },
@@ -28,7 +29,8 @@ export const MENU = [
   {
     group: '채팅 관리',
     items: [
-      { path: '/chat/messages', label: '채팅 메시지 관리' },
+      { path: '/chat/messages', label: '채팅 메시지 관리', ready: true },
+      { path: '/chat/stickers', label: '스티커 관리', ready: true },
       { path: '/chat/users', label: '채팅 사용자 관리' },
     ],
   },

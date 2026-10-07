@@ -4,6 +4,8 @@ import com.streaming.core.common.NotFoundException;
 import com.streaming.core.domain.channel.Channel;
 import com.streaming.core.domain.channel.ChannelRepository;
 import com.streaming.core.domain.channel.ChannelStatus;
+import com.streaming.core.domain.broadcast.BroadcastRepository;
+import com.streaming.core.domain.quiz.QuizPushRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ import java.util.List;
 public class ChannelService {
 
     private final ChannelRepository channelRepository;
+    private final BroadcastRepository broadcastRepository;
+    private final QuizPushRepository quizPushRepository;
 
     public List<Channel> findAll() {
         return channelRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
@@ -60,6 +64,9 @@ public class ChannelService {
 
     @Transactional
     public void delete(Long id) {
+        if (broadcastRepository.existsByChannelId(id) || quizPushRepository.existsByChannelId(id)) {
+            throw new IllegalArgumentException("방송/녹화 이력이 있는 채널은 삭제할 수 없습니다.");
+        }
         channelRepository.delete(get(id));
     }
 

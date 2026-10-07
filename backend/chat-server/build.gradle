@@ -1,7 +1,10 @@
 apply plugin: 'org.springframework.boot'
 
-// 채팅 서버는 DB를 직접 쓰지 않음 (Redis만 사용) → core 의존 X
+// 채팅 서버: WebSocket(STOMP) + Redis Pub/Sub
+// core 의존: 채널 얼리기 상태/스티커 조회, 채팅 로그(chat_message) 일괄 저장
 dependencies {
+    implementation project(':core')
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 }

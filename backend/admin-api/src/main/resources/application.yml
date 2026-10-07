@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8091
 
 spring:
   application:
@@ -17,6 +17,10 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+  data:
+    redis:              # 채팅 관리/퀴즈 출제 이벤트 발행 (chat-server 가 구독)
+      host: localhost
+      port: 6379
 
 app:
   cors:
@@ -24,3 +28,4 @@ app:
   media:
     rtmp-base-url: rtmp://localhost/live      # OBS "서버" 칸에 들어갈 값
     hls-base-url: http://localhost:8080/live  # 시청 URL
+    http-base-url: http://localhost:8080      # SRS http_server (녹화 mp4: {http-base-url}/dvr/...)

@@ -4,6 +4,11 @@ import { MENU } from './menu.js'
 import ChannelPage from './pages/ChannelPage.jsx'
 import SchedulePage from './pages/SchedulePage.jsx'
 import Placeholder from './pages/Placeholder.jsx'
+import ChatMessagePage from './pages/ChatMessagePage.jsx'
+import StickerPage from './pages/StickerPage.jsx'
+import QuizPage from './pages/QuizPage.jsx'
+import QuizSchedulePage from './pages/QuizSchedulePage.jsx'
+import RecordingPage from './pages/RecordingPage.jsx'
 
 export default function App() {
   const [open, setOpen] = useState(() => Object.fromEntries(MENU.map((m) => [m.group, true])))
@@ -42,6 +47,11 @@ export default function App() {
             <Route path="/" element={<Navigate to="/live/channels" replace />} />
             <Route path="/live/channels" element={<ChannelPage />} />
             <Route path="/live/schedules" element={<SchedulePage />} />
+            <Route path="/quiz/questions" element={<QuizPage />} />
+            <Route path="/quiz/programming" element={<QuizSchedulePage />} />
+            <Route path="/vod/recordings" element={<RecordingPage />} />
+            <Route path="/chat/messages" element={<ChatMessagePage />} />
+            <Route path="/chat/stickers" element={<StickerPage />} />
             {MENU.flatMap((m) => m.items)
               .filter((it) => !it.ready)
               .map((it) => (

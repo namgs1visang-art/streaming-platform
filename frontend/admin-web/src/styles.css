@@ -46,3 +46,75 @@ button.danger { color: #dc2626; }
 .muted { color: #9ca3af; font-size: 13px; }
 .center { text-align: center; }
 .error { color: #dc2626; font-size: 13px; }
+
+/* ── 공통 추가 ── */
+button:disabled { opacity: .45; cursor: default; }
+h3 { font-size: 15px; margin: 20px 0 8px; }
+.label { font-size: 13px; font-weight: 600; color: #4b5563; }
+.small { font-size: 12px; }
+.nowrap { white-space: nowrap; }
+.spacer { flex: 1; }
+.grow { flex: 1; }
+.ok { color: #16a34a; font-size: 12px; }
+.warn { color: #d97706; font-size: 12px; }
+.link { font-size: 13px; color: #3b6cf6; text-decoration: none; margin-left: auto; }
+.ghost-link { font-size: 12px; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 10px; text-decoration: none; }
+.search { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; min-width: 200px; }
+button.toggle { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
+button.toggle.on { background: #2563eb; color: #fff; border-color: #2563eb; }
+tr.moderated td { color: #9ca3af; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin: 12px 0; }
+.tabs button { background: none; color: #6b7280; border-radius: 0; border-bottom: 2px solid transparent; }
+.tabs button.active { color: #111827; font-weight: 700; border-bottom-color: #3b6cf6; }
+
+.badge.st-HIDDEN { background: #fef3c7; color: #b45309; }
+.badge.st-DELETED { background: #fee2e2; color: #dc2626; }
+.badge.quiz { background: #dbeafe; color: #1d4ed8; }
+.badge.vote { background: #fef3c7; color: #b45309; }
+.badge.rec-READY { background: #dcfce7; color: #15803d; }
+.badge.rec-RECORDING { background: #fee2e2; color: #dc2626; }
+.badge.rec-FAILED { background: #fee2e2; color: #991b1b; }
+
+/* 채팅 실시간 피드 */
+.feed-wrap { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 12px 12px; }
+.feed { height: calc(100vh - 380px); min-height: 320px; overflow-y: auto; font-size: 13px; border-top: 1px solid #eef0f3; }
+.feed-row { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-bottom: 1px solid #f3f4f6; }
+.feed-row:hover { background: #f9fafb; }
+.feed-row .t { color: #9ca3af; font-size: 11px; font-family: Consolas, monospace; }
+.feed-row .nick { color: #2563eb; white-space: nowrap; }
+.feed-row .body { flex: 1; word-break: break-all; }
+.feed-row.moderated .body { color: #9ca3af; text-decoration: line-through; }
+.feed-row.admin { background: #fef2f2; }
+.feed-row.system { color: #b45309; }
+.row-actions { display: none; gap: 4px; }
+.feed-row:hover .row-actions { display: flex; }
+.admin-send { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.admin-send input { flex: 1; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+.admin-tag { background: #dc2626; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.sticker-emoji { font-size: 22px; line-height: 1; }
+.sticker-sm { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; }
+.sticker-md { width: 40px; height: 40px; object-fit: contain; }
+.sticker-big { font-size: 30px; }
+
+/* 퀴즈 */
+.quiz-form { display: flex; flex-direction: column; gap: 8px; }
+.option-row input.grow { min-width: 300px; }
+td.options { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+td.options .answer { color: #16a34a; font-weight: 700; }
+.split { display: flex; gap: 20px; align-items: flex-start; }
+.split-left { width: 300px; flex-shrink: 0; }
+.split-right { flex: 1; min-width: 0; }
+.schedule-list { list-style: none; margin: 0; padding: 0; border: 1px solid #e5e7eb; border-radius: 8px; max-height: calc(100vh - 220px); overflow-y: auto; }
+.schedule-list li { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; cursor: pointer; font-size: 13px; display: flex; flex-direction: column; gap: 2px; }
+.schedule-list li.active { background: #eef3ff; border-left: 3px solid #3b6cf6; }
+.schedule-list li .muted { font-size: 12px; }
+.live-panel { border-color: #fca5a5; background: #fffafa; }
+.live-panel .timer { font-weight: 700; color: #dc2626; font-size: 18px; }
+.bars { display: flex; flex-direction: column; gap: 4px; min-width: 260px; }
+.bar-row { display: grid; grid-template-columns: minmax(80px, 1fr) 2fr 80px; align-items: center; gap: 8px; font-size: 12px; }
+.bar-row.answer .bar-label { color: #16a34a; font-weight: 700; }
+.bar { height: 10px; background: #f3f4f6; border-radius: 5px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: #3b6cf6; transition: width .4s; }
+.bar-row.answer .bar span { background: #16a34a; }
+.bar-num { color: #6b7280; text-align: right; }

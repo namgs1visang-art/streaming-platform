@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8092
 
 spring:
   application:
@@ -26,6 +26,11 @@ app:
     allowed-origins: http://localhost:5174
   media:
     hls-base-url: http://localhost:8080/live
+    http-base-url: http://localhost:8080      # SRS http_server (녹화 mp4: {http-base-url}/dvr/...)
   publish:
     require-schedule: false   # true: 편성된 시간에만 OBS 송출 허용
     early-minutes: 10         # 시작 몇 분 전부터 송출 허용할지
+  recording:
+    default-enabled: true     # 편성 없이 송출한 방송도 녹화(다시보기)할지
+    dvr-host-dir: ""          # (선택) infra/srs/dvr 의 PC 경로. 지정하면 파일 크기 기록 + 녹화 OFF 방송 파일 삭제
+    stuck-minutes: 3          # 방송 종료 후 이 시간 안에 on_dvr 가 안 오면 녹화 실패 처리

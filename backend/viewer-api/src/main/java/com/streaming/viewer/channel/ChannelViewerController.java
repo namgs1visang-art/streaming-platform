@@ -28,7 +28,8 @@ public class ChannelViewerController {
 
     public record ChannelView(Long id, String code, String name, String description,
                               String status, LocalDateTime liveStartedAt,
-                              String playbackUrl, long viewerCount) {
+                              String playbackUrl, long viewerCount,
+                              boolean chatFrozen, boolean stickerFrozen) {
     }
 
     public record ScheduleView(Long id, String channelCode, String channelName, String title,
@@ -66,6 +67,7 @@ public class ChannelViewerController {
         return new ChannelView(c.getId(), c.getCode(), c.getName(), c.getDescription(),
                 c.getStatus().name(), c.getLiveStartedAt(),
                 hlsBaseUrl + "/" + c.getCode() + ".m3u8",
-                viewerCountReader.get(c.getCode()));
+                viewerCountReader.get(c.getCode()),
+                c.isChatFrozen(), c.isStickerFrozen());
     }
 }

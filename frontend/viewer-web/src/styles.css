@@ -38,11 +38,49 @@ button { font: inherit; cursor: pointer; }
 .chat-list li.system { color: #fbbf24; }
 .chat-form { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #262833; }
 .chat-form input { flex: 1; background: #23262f; border: 0; border-radius: 6px; padding: 10px; color: #fff; }
-.chat-form button, .quiz-option { background: #00e09e; color: #0e0f13; border: 0; border-radius: 6px; padding: 0 14px; font-weight: 700; }
-.chat-form button:disabled { opacity: .4; }
+.chat-form button { background: #00e09e; color: #0e0f13; border: 0; border-radius: 6px; padding: 0 14px; font-weight: 700; }
+.chat-form button:disabled, .chat-form input:disabled { opacity: .4; }
+.chat-form .sticker-toggle { background: #23262f; padding: 0 10px; font-size: 18px; }
+.chat-head { display: flex; align-items: center; gap: 8px; }
+.frozen-tag { font-size: 11px; font-weight: 700; color: #60a5fa; background: rgba(96,165,250,.15); padding: 2px 6px; border-radius: 4px; }
 
+/* 채팅 줄 */
+.chat-list li.admin { background: rgba(255,59,59,.12); border-left: 3px solid #ff3b3b; padding: 4px 8px; margin: 2px 0; border-radius: 4px; }
+.admin-tag { background: #ff3b3b; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 3px; }
+.chat-list li.error-line { color: #f87171; font-size: 13px; }
+.chat-list li.sticker-line { display: flex; align-items: center; gap: 6px; }
+.sticker-emoji { line-height: 1; }
+.sticker-img { object-fit: contain; vertical-align: middle; }
+
+/* 스티커 선택 */
+.sticker-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px; border-top: 1px solid #262833; max-height: 180px; overflow-y: auto; }
+.sticker-btn { background: #23262f; border: 0; border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; }
+.sticker-btn:hover { background: #2f3340; }
+
+/* 퀴즈/투표 */
 .quiz { margin: 10px; padding: 12px; background: #1f2a44; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
-.quiz-option { padding: 8px; text-align: left; }
+.quiz-head { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.quiz-badge { background: #00e09e; color: #0e0f13; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.quiz-badge.vote { background: #fbbf24; }
+.quiz-timer { color: #fbbf24; font-weight: 700; }
+.quiz-x { margin-left: auto; background: none; border: 0; color: #9ca3af; }
+.quiz-q { font-size: 15px; }
+.quiz-option { position: relative; overflow: hidden; display: flex; justify-content: space-between; gap: 8px;
+  background: #2a3655; color: #e5e7eb; border: 1px solid transparent; border-radius: 6px; padding: 8px 10px; text-align: left; font-weight: 600; }
+.quiz-option:not(:disabled):hover { border-color: #00e09e; }
+.quiz-option:disabled { cursor: default; }
+.quiz-option.picked { border-color: #00e09e; }
+.quiz-option.correct { border-color: #22c55e; background: #1d3b2d; }
+.quiz-option.wrong { border-color: #ef4444; }
+.quiz-bar { position: absolute; inset: 0 auto 0 0; background: rgba(0,224,158,.22); transition: width .4s; }
+.quiz-label, .quiz-pct { position: relative; }
+.quiz-pct { color: #9ca3af; font-size: 12px; white-space: nowrap; }
+.quiz-foot { font-size: 12px; color: #9ca3af; }
+
+/* 다시보기 */
+.replay-badge { background: #6366f1; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.quiz-timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+.ghost-btn { background: #23262f; color: #e5e7eb; border: 1px solid #333744; border-radius: 6px; padding: 6px 10px; font-size: 12px; }
 
 /* 편성표 */
 .board { display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; }

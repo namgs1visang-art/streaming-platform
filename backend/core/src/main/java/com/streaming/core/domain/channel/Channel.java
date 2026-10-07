@@ -42,6 +42,14 @@ public class Channel extends BaseTimeEntity {
 
     private LocalDateTime liveStartedAt;
 
+    /** 채팅 얼리기: true 면 시청자 채팅/스티커 전송 불가 (읽기만 가능) */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean chatFrozen;
+
+    /** 스티커 얼리기: true 면 스티커 전송만 불가 (텍스트 채팅은 가능) */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean stickerFrozen;
+
     public static Channel create(String code, String name, String description) {
         Channel channel = new Channel();
         channel.code = code;
@@ -73,6 +81,14 @@ public class Channel extends BaseTimeEntity {
     public void goOffline() {
         this.status = ChannelStatus.OFFLINE;
         this.liveStartedAt = null;
+    }
+
+    public void freezeChat(boolean frozen) {
+        this.chatFrozen = frozen;
+    }
+
+    public void freezeSticker(boolean frozen) {
+        this.stickerFrozen = frozen;
     }
 
     private static String generateKey() {

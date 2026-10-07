@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,12 @@ public class ScheduleService {
     public boolean isOnAir(Long channelId, int earlyMinutes) {
         LocalDateTime now = LocalDateTime.now();
         return !scheduleRepository.findOnAir(channelId, now, now.plusMinutes(earlyMinutes)).isEmpty();
+    }
+
+    /** 지금 송출 중이어야 하는 스케줄 (on_publish 시 방송 회차와 연결) */
+    public Optional<Schedule> findOnAir(Long channelId, int earlyMinutes) {
+        LocalDateTime now = LocalDateTime.now();
+        return scheduleRepository.findOnAir(channelId, now, now.plusMinutes(earlyMinutes)).stream().findFirst();
     }
 
     @Transactional
