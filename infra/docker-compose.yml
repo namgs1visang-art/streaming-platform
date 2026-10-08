@@ -21,6 +21,7 @@ services:
       - "6379:6379"
 
   minio:
+    profiles: ["storage"]    
     image: minio/minio:latest
     container_name: sp-minio
     command: server /data --console-address ":9001"
