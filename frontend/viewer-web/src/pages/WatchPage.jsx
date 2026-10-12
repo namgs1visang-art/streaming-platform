@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import HlsPlayer from '../components/HlsPlayer.jsx'
+import OmePlayer from '../components/OmePlayer.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
 
 export default function WatchPage() {
@@ -22,7 +22,7 @@ export default function WatchPage() {
     <main className="watch">
       <section className="player-area">
         {live ? (
-          <HlsPlayer src={channel.playbackUrl} />
+          <OmePlayer webrtcUrl={channel.webrtcUrl} hlsUrl={channel.playbackUrl} />
         ) : (
           <div className="offline">지금은 방송 중이 아닙니다.</div>
         )}

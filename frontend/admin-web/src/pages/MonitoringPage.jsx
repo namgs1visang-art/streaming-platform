@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { useChatSocket, VIEWER_URL } from '../lib/useChatSocket.js'
-import HlsPreview from '../components/HlsPreview.jsx'
+import LivePreview from '../components/LivePreview.jsx'
 import { LiveFeed } from './ChatMessagePage.jsx'
 import { Bars } from './QuizSchedulePage.jsx'
 
@@ -149,7 +149,7 @@ function BroadcastPanel({ c, now, run }) {
   return (
     <div className="panel">
       <div className="panel-title">방송</div>
-      {live ? <HlsPreview src={c.playbackUrl} /> : <div className="preview off">{c.publishLocked ? '송출 잠김 (방송 중지됨)' : '방송 중이 아닙니다'}</div>}
+      {live ? <LivePreview code={c.code} hlsSrc={c.playbackUrl} /> : <div className="preview off">{c.publishLocked ? '송출 잠김 (방송 중지됨)' : '방송 중이 아닙니다'}</div>}
 
       <dl className="kv">
         <dt>상태</dt><dd><span className={`badge ${live ? 'live' : ''}`}>{c.status}</span>{c.publishLocked && <span className="badge st-DELETED">송출 잠금</span>}</dd>

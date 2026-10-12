@@ -13,7 +13,7 @@ export default function HlsPreview({ src }) {
       return
     }
     if (!Hls.isSupported()) return
-    const hls = new Hls({ liveSyncDurationCount: 3, lowLatencyMode: true })
+    const hls = new Hls({ liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 5, maxLiveSyncPlaybackRate: 1.2, lowLatencyMode: true })
     hls.loadSource(src)
     hls.attachMedia(video)
     hls.on(Hls.Events.ERROR, (_, data) => {

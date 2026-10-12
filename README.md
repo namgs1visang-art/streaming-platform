@@ -53,6 +53,11 @@ cd frontend/viewer-web && npm install && npm run dev   # http://localhost:5174
    - 서비스: **사용자 지정**
    - 서버: `rtmp://localhost/live`
    - 스트림 키: 표의 `channel1?key=...` 값 (클릭하면 복사)
+   - (지연 단축) 설정 → 출력 → 출력 방식 **고급** → 스트리밍: 데이터율 제어 `CBR`, **키프레임 간격 `1`초**, CPU 사용량 `veryfast`, 튜닝 `zerolatency`
+   - (WebRTC 재생) **B-프레임 0** — x264 는 프로파일 `baseline`, NVENC 는 최대 B-프레임 `0`. B-프레임이 있으면 WebRTC 화면이 끊깁니다.
+     > 라이브 재생은 WebRTC(WHEP, UDP 8000, 지연 1초 미만) 우선, 실패하면 HLS 로 자동 전환됩니다. 시청 URL 에 `?hls` 를 붙이면 HLS 로만 재생.
+     > 다른 기기(폰 등)에서 WebRTC 로 보려면 `CANDIDATE=<PC의 LAN IP> docker compose up -d srs`.
+     > 키프레임 간격이 0(자동)이면 SRS 가 HLS 세그먼트를 수 초 단위로밖에 못 잘라 지연이 10초 이상으로 늘어납니다.
 3. 방송 시작 → 관리자 화면 상태가 `LIVE` 로 변경
 4. 시청자(5174) → 채널 클릭 → 재생 + 채팅
 

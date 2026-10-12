@@ -26,7 +26,7 @@ button { font: inherit; cursor: pointer; }
 /* 시청 화면 */
 .watch { display: flex; height: calc(100vh - 56px); }
 .player-area { flex: 1; min-width: 0; padding: 16px; overflow-y: auto; }
-.video, .offline { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; }
+.video, .offline { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
 .offline { display: flex; align-items: center; justify-content: center; color: #6b7280; }
 .info h3 { margin: 12px 0 4px; display: flex; gap: 8px; align-items: center; }
 

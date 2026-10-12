@@ -42,6 +42,11 @@ services:
       - "1935:1935"   # RTMP (OBS 송출)
       - "1985:1985"   # HTTP API (모니터링)
       - "8080:8080"   # HTTP 서버 (HLS 재생)
+      - "8000:8000/udp" # WebRTC 미디어
+    environment:
+      # WebRTC 후보 IP: 이 PC 에서만 볼 거면 127.0.0.1, 다른 기기(폰 등)에서 보려면 PC 의 LAN IP
+      #   예) CANDIDATE=192.168.0.10 docker compose up -d srs
+      CANDIDATE: ${CANDIDATE:-127.0.0.1}
     volumes:
       - ./srs/srs.conf:/usr/local/srs/conf/custom.conf
       - ./srs/dvr:/usr/local/srs/objs/nginx/html/dvr
