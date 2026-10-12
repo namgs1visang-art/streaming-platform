@@ -6,6 +6,7 @@ import com.streaming.core.chat.MessageType;
 import com.streaming.core.common.ConflictException;
 import com.streaming.core.common.NotFoundException;
 import com.streaming.core.domain.channel.Channel;
+import com.streaming.core.domain.channel.ChannelRepository;
 import com.streaming.core.domain.channel.ChannelStatus;
 import com.streaming.core.domain.quiz.*;
 import com.streaming.core.domain.schedule.Schedule;
@@ -48,6 +49,7 @@ public class QuizService {
     private final QuizPushRepository pushRepository;
     private final QuizAnswerRepository answerRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ChannelRepository channelRepository;
     private final ChatEventPublisher publisher;
     private final StringRedisTemplate redis;
 
@@ -156,7 +158,20 @@ public class QuizService {
     public QuizPush push(Long scheduleId, Long quizId) {
         Schedule schedule = scheduleRepository.findWithChannel(scheduleId)
                 .orElseThrow(() -> new NotFoundException("스케줄이 없습니다. id=" + scheduleId));
-        Channel channel = schedule.getChannel();
+        return doPush(schedule.getChannel(), schedule, get(quizId));
+    }
+
+    /** 채널에 바로 출제 (모니터링 화면) — 지금 시간대 편성이 있으면 그 편성에 기록 */
+    @Transactional
+    public QuizPush pushToChannel(Long channelId, Long quizId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("채널이 없습니다. id=" + channelId));
+        LocalDateTime now = LocalDateTime.now();
+        Schedule schedule = scheduleRepository.findOnAir(channelId, now, now).stream().findFirst().orElse(null);
+        return doPush(channel, schedule, get(quizId));
+    }
+
+    private QuizPush doPush(Channel channel, Schedule schedule, Quiz quiz) {
         if (channel.getStatus() != ChannelStatus.LIVE) {
             throw new ConflictException("방송 중(LIVE)인 채널에서만 퀴즈를 출제할 수 있습니다.");
         }
@@ -164,7 +179,6 @@ public class QuizService {
         if (!pushRepository.findOpenByChannel(channel.getId(), now).isEmpty()) {
             throw new ConflictException("진행 중인 퀴즈가 있습니다. 마감 후 출제하세요.");
         }
-        Quiz quiz = get(quizId);
         QuizPush push = pushRepository.save(QuizPush.of(quiz, channel, schedule, now));
 
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -176,8 +190,13 @@ public class QuizService {
         payload.put("timeLimitSec", push.getTimeLimitSec());
         payload.put("closesAt", push.getClosesAt().atZone(ZoneId.systemDefault()).toInstant().toString());
         publisher.publish(ChatEvent.system(MessageType.QUIZ_START, channel.getCode(), push.getQuestion(), payload));
-        log.info("[quiz] 출제 push={}, channel={}, quiz={}", push.getId(), channel.getCode(), quizId);
+        log.info("[quiz] 출제 push={}, channel={}, quiz={}", push.getId(), channel.getCode(), quiz.getId());
         return push;
+    }
+
+    /** 채널에서 진행 중인 퀴즈 (모니터링) */
+    public Optional<QuizPush> findOpenByChannel(Long channelId) {
+        return pushRepository.findOpenByChannel(channelId, LocalDateTime.now()).stream().findFirst();
     }
 
     /** 관리자 조기 마감 */

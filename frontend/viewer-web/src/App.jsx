@@ -1,11 +1,21 @@
-import { Link, NavLink, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage.jsx'
 import WatchPage from './pages/WatchPage.jsx'
 import ScheduleBoardPage from './pages/ScheduleBoardPage.jsx'
 import ReplayListPage from './pages/ReplayListPage.jsx'
 import ReplayPage from './pages/ReplayPage.jsx'
+import OverlayQuizPage from './pages/OverlayQuizPage.jsx'
 
 export default function App() {
+  // OBS 오버레이는 헤더 없이 투명 화면만
+  if (useLocation().pathname.startsWith('/overlay/')) {
+    return (
+      <Routes>
+        <Route path="/overlay/:code/quiz" element={<OverlayQuizPage />} />
+      </Routes>
+    )
+  }
+
   return (
     <>
       <header className="header">

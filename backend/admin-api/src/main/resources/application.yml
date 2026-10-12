@@ -29,3 +29,5 @@ app:
     rtmp-base-url: rtmp://localhost/live      # OBS "서버" 칸에 들어갈 값
     hls-base-url: http://localhost:8080/live  # 시청 URL
     http-base-url: http://localhost:8080      # SRS http_server (녹화 mp4: {http-base-url}/dvr/...)
+  srs:
+    api-url: http://localhost:1985            # SRS HTTP API (스트림 상태 조회, 송출 강제 종료)

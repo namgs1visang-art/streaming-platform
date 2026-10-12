@@ -50,6 +50,10 @@ public class Channel extends BaseTimeEntity {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean stickerFrozen;
 
+    /** 송출 잠금: 관리자가 [방송 중지]하면 true → OBS 가 재접속해도 on_publish 에서 거부 */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean publishLocked;
+
     public static Channel create(String code, String name, String description) {
         Channel channel = new Channel();
         channel.code = code;
@@ -63,6 +67,10 @@ public class Channel extends BaseTimeEntity {
     public void update(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    public void lockPublish(boolean locked) {
+        this.publishLocked = locked;
     }
 
     public void regenerateStreamKey() {

@@ -6,7 +6,7 @@ export const MENU = [
       { path: '/live/channels', label: '채널 관리', ready: true },
       { path: '/live/schedules', label: '스케줄 관리', ready: true },
       { path: '/live/programming', label: '편성 관리' },
-      { path: '/live/monitoring', label: '모니터링' },
+      { path: '/live/monitoring', label: '모니터링', ready: true },
     ],
   },
   {

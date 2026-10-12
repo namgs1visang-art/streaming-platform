@@ -93,3 +93,34 @@ button { font: inherit; cursor: pointer; }
   .watch { flex-direction: column; height: auto; }
   .chat { width: 100%; height: 420px; border-left: 0; }
 }
+
+/* ── OBS 오버레이 (퀴즈/투표) ── */
+html.overlay-mode, html.overlay-mode body, html.overlay-mode #root { background: transparent !important; }
+.ov-wrap { position: fixed; width: 460px; padding: 24px; }
+.ov-tr { top: 0; right: 0; transform-origin: top right; }
+.ov-tl { top: 0; left: 0; transform-origin: top left; }
+.ov-br { bottom: 0; right: 0; transform-origin: bottom right; }
+.ov-bl { bottom: 0; left: 0; transform-origin: bottom left; }
+.ov-card { background: rgba(14, 15, 19, .88); border: 2px solid #00e09e; border-radius: 16px; padding: 16px 18px; color: #fff;
+  box-shadow: 0 8px 30px rgba(0,0,0,.45); animation: ov-in .35s ease-out; }
+.ov-card.closed { border-color: #fbbf24; }
+@keyframes ov-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+.ov-head { display: flex; align-items: center; gap: 8px; }
+.ov-badge { background: #00e09e; color: #0e0f13; font-weight: 800; font-size: 13px; padding: 3px 8px; border-radius: 6px; }
+.ov-badge.vote { background: #fbbf24; }
+.ov-title { flex: 1; font-size: 13px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-timer { font-size: 20px; font-weight: 800; color: #fbbf24; font-variant-numeric: tabular-nums; }
+.ov-progress { height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; margin: 10px 0 0; overflow: hidden; }
+.ov-progress span { display: block; height: 100%; background: #fbbf24; transition: width .25s linear; }
+.ov-q { font-size: 20px; font-weight: 800; margin: 12px 0; line-height: 1.35; word-break: keep-all; }
+.ov-opt { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px; margin-top: 8px;
+  background: rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; font-size: 16px; font-weight: 700; }
+.ov-bar { position: absolute; inset: 0 auto 0 0; background: rgba(0,224,158,.35); transition: width .5s ease; }
+.ov-opt > span:not(.ov-bar) { position: relative; }
+.ov-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.18); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.ov-label { flex: 1; }
+.ov-pct { font-variant-numeric: tabular-nums; }
+.ov-opt.win { outline: 2px solid #fbbf24; }
+.ov-opt.win .ov-bar { background: rgba(251,191,36,.5); }
+.ov-opt.dim { opacity: .55; }
+.ov-foot { margin-top: 12px; font-size: 13px; color: #d1d5db; }

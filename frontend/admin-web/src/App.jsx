@@ -9,6 +9,7 @@ import StickerPage from './pages/StickerPage.jsx'
 import QuizPage from './pages/QuizPage.jsx'
 import QuizSchedulePage from './pages/QuizSchedulePage.jsx'
 import RecordingPage from './pages/RecordingPage.jsx'
+import MonitoringPage from './pages/MonitoringPage.jsx'
 
 export default function App() {
   const [open, setOpen] = useState(() => Object.fromEntries(MENU.map((m) => [m.group, true])))
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/live/channels" replace />} />
             <Route path="/live/channels" element={<ChannelPage />} />
             <Route path="/live/schedules" element={<SchedulePage />} />
+            <Route path="/live/monitoring" element={<MonitoringPage />} />
             <Route path="/quiz/questions" element={<QuizPage />} />
             <Route path="/quiz/programming" element={<QuizSchedulePage />} />
             <Route path="/vod/recordings" element={<RecordingPage />} />

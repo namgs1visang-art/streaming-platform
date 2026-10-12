@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 시청자 수 집계: /topic/chat/{채널코드} 구독 = 입장, 연결 끊김 = 퇴장.
  * Redis 키 viewers:{채널코드} 를 viewer-api 가 읽어서 화면에 보여준다.
- * 관리자 화면(구독 헤더 role=admin)은 시청자 수에서 제외한다.
+ * 관리자 화면/OBS 오버레이(구독 헤더 role=admin|overlay)는 시청자 수에서 제외한다.
  */
 @Component
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class ViewerPresenceListener {
         String dest = accessor.getDestination();
         String sessionId = accessor.getSessionId();
         if (dest == null || sessionId == null || !dest.startsWith(DEST_PREFIX)) return;
-        if ("admin".equals(accessor.getFirstNativeHeader("role"))) return;
+        if (accessor.getFirstNativeHeader("role") != null) return; // role=admin|overlay
 
         String channelCode = dest.substring(DEST_PREFIX.length());
         if (sessionChannel.putIfAbsent(sessionId, channelCode) == null) {

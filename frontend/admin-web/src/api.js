@@ -64,6 +64,14 @@ export const api = {
     push: (scheduleId, quizId) => request('POST', `/api/admin/quiz-schedules/${scheduleId}/pushes`, { quizId }),
     close: (pushId) => request('POST', `/api/admin/quiz-schedules/pushes/${pushId}/close`),
   },
+  monitor: {
+    channels: () => request('GET', '/api/admin/monitor/channels'),
+    detail: (id) => request('GET', `/api/admin/monitor/channels/${id}`),
+    stop: (id, message) => request('POST', `/api/admin/monitor/channels/${id}/stop`, { message }),
+    allowPublish: (id) => request('POST', `/api/admin/monitor/channels/${id}/allow-publish`),
+    notice: (id, content) => request('POST', `/api/admin/monitor/channels/${id}/notice`, { content }),
+    pushQuiz: (id, quizId) => request('POST', `/api/admin/monitor/channels/${id}/quiz-pushes`, { quizId }),
+  },
   broadcasts: {
     list: (params) => request('GET', `/api/admin/broadcasts?${qs(params)}`),
     remove: (id) => request('DELETE', `/api/admin/broadcasts/${id}`),

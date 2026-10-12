@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
-import { useChatSocket } from '../lib/useChatSocket.js'
+import { useChatSocket, VIEWER_URL } from '../lib/useChatSocket.js'
 
 const today = () => new Date().toLocaleDateString('sv-SE')
 const addDays = (d, n) => {
@@ -135,6 +135,13 @@ function ScheduleQuizDetail({ scheduleId, onChanged }) {
           <span className={connected ? 'ok small' : 'warn small'}>{connected ? '● 실시간' : '○ 연결 중'}</span>
         </div>
         {!isLive && <p className="muted">채널이 LIVE(OBS 송출 중)일 때 출제할 수 있습니다. 지금은 퀴즈를 미리 담아 두세요.</p>}
+        <div className="form-row overlay-url">
+          <span className="label">OBS 오버레이</span>
+          <code className="mono" title="클릭하여 복사" onClick={() => navigator.clipboard?.writeText(`${VIEWER_URL}/overlay/${schedule.channelCode}/quiz`)}>
+            {VIEWER_URL}/overlay/{schedule.channelCode}/quiz
+          </code>
+          <span className="muted small">OBS → 소스 추가 → 브라우저 → URL 붙여넣기, 1920×1080 (위치: ?pos=tr|tl|br|bl, 크기: &amp;scale=1.3)</span>
+        </div>
       </div>
       {error && <p className="error">{error}</p>}
 
@@ -226,7 +233,7 @@ function LivePanel({ push, live, onClose }) {
   )
 }
 
-function Bars({ options, counts = [], total, answerIndex }) {
+export function Bars({ options, counts = [], total, answerIndex }) {
   return (
     <div className="bars">
       {options.map((o, i) => {

@@ -67,6 +67,9 @@ public class SrsHookController {
         if (!channel.matchesKey(req.streamKey())) {
             return reject("스트림키 불일치", req);
         }
+        if (channel.isPublishLocked()) {
+            return reject("관리자가 방송을 중지함 (모니터링에서 [송출 허용] 필요)", req);
+        }
         Optional<Schedule> onAir = scheduleService.findOnAir(channel.getId(), earlyMinutes);
         if (requireSchedule && onAir.isEmpty()) {
             return reject("편성 시간이 아님", req);

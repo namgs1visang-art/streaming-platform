@@ -9,7 +9,7 @@ const addDays = (d, n) => {
   x.setDate(x.getDate() + n)
   return x.toLocaleDateString('sv-SE')
 }
-const time = (iso) => (iso ? new Date(iso).toLocaleTimeString('ko-KR', { hour12: false }) : '')
+const time = (iso) => (iso ? new Date(iso).toLocaleTimeString('sv-SE') : '')
 const dateTime = (iso) => (iso ? new Date(iso).toLocaleString('sv-SE').slice(0, 19) : '')
 const STATUS_LABEL = { VISIBLE: '노출', HIDDEN: '숨김', DELETED: '삭제' }
 
@@ -86,7 +86,7 @@ export default function ChatMessagePage() {
 // 실시간 피드
 // ─────────────────────────────────────────────
 
-function LiveFeed({ channelCode, onFreezeChanged }) {
+export function LiveFeed({ channelCode, onFreezeChanged }) {
   const [feed, setFeed] = useState([])
   const [keyword, setKeyword] = useState('')
   const [showModerated, setShowModerated] = useState(true)
