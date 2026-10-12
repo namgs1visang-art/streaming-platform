@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  OvenMediaEngine 설정 (v0.20.5 기본 설정 기반)
+
+  OBS ─RTMP:1935─▶ OME ─┬─ WebRTC  ws://localhost:3333/live/{채널코드}/master   (지연 1초 미만)
+                        ├─ LL-HLS  http://localhost:3333/live/{채널코드}/master.m3u8 (2~5초, WebRTC 실패 시)
+                        └─ 녹화    /opt/ovenmediaengine/records (= infra/ome/records) ← viewer-api 가 REST API 로 시작/종료
+
+  송출 시작/종료 → AdmissionWebhooks → viewer-api /api/hooks/ome/admission (스트림키 인증, 방송 회차)
+  상태 조회·강제 종료·녹화 → REST API :8081 (Basic 인증, AccessToken)
+-->
+<Server version="8">
+	<Name>OvenMediaEngine</Name>
+	<Type>origin</Type>
+	<IP>*</IP>
+	<PrivacyProtection>false</PrivacyProtection>
+
+	<Modules>
+		<HTTP2>
+			<Enable>true</Enable>
+		</HTTP2>
+		<LLHLS>
+			<Enable>true</Enable>
+		</LLHLS>
+		<P2P>
+			<Enable>false</Enable>
+			<MaxClientPeersPerHostPeer>2</MaxClientPeersPerHostPeer>
+		</P2P>
+	</Modules>
+
+	<Bind>
+		<Managers>
+			<API>
+				<Port>${env:OME_API_PORT:8081}</Port>
+				<WorkerCount>1</WorkerCount>
+			</API>
+		</Managers>
+
+		<Providers>
+			<RTMP>
+				<Port>${env:OME_RTMP_PROV_PORT:1935}</Port>
+				<WorkerCount>1</WorkerCount>
+			</RTMP>
+		</Providers>
+
+		<Publishers>
+			<LLHLS>
+				<Port>${env:OME_LLHLS_STREAM_PORT:3333}</Port>
+				<WorkerCount>1</WorkerCount>
+			</LLHLS>
+			<WebRTC>
+				<Signalling>
+					<Port>${env:OME_WEBRTC_SIGNALLING_PORT:3333}</Port>
+					<WorkerCount>1</WorkerCount>
+				</Signalling>
+				<!-- OME_HOST_IP: 브라우저가 접속할 이 PC 의 IP (docker-compose 에서 지정. 이 PC 에서만 볼 거면 127.0.0.1) -->
+				<IceCandidates>
+					<IceCandidate>${env:OME_HOST_IP:*}:${env:OME_WEBRTC_CANDIDATE_PORT:10000-10004/udp}</IceCandidate>
+					<TcpRelay>${env:OME_HOST_IP:*}:${env:OME_WEBRTC_TCP_RELAY_PORT:3478}</TcpRelay>
+					<TcpForce>true</TcpForce>
+					<TcpRelayWorkerCount>1</TcpRelayWorkerCount>
+				</IceCandidates>
+			</WebRTC>
+		</Publishers>
+	</Bind>
+
+	<!-- 모든 VirtualHost 기본 CORS (브라우저에서 LL-HLS/WebRTC 직접 접속) -->
+	<Defaults>
+		<CrossDomains>
+			<Url>*</Url>
+		</CrossDomains>
+	</Defaults>
+
+	<Managers>
+		<Host>
+			<Names>
+				<Name>*</Name>
+			</Names>
+		</Host>
+		<API>
+			<!-- admin-api / viewer-api 의 app.ome.access-token 과 같아야 함 -->
+			<AccessToken>${env:OME_API_ACCESS_TOKEN:ome-access-token}</AccessToken>
+		</API>
+	</Managers>
+
+	<VirtualHosts>
+		<VirtualHost>
+			<Name>default</Name>
+			<Distribution>streaming-platform</Distribution>
+
+			<Host>
+				<Names>
+					<Name>*</Name>
+				</Names>
+			</Host>
+
+			<!-- 송출 시작/종료 시 viewer-api 호출 (SRS 의 on_publish / on_unpublish 에 해당) -->
+			<AdmissionWebhooks>
+				<ControlServerUrl>${env:OME_WEBHOOK_URL:http://host.docker.internal:8092/api/hooks/ome/admission}</ControlServerUrl>
+				<!-- viewer-api 의 app.ome.webhook-secret 과 같아야 함 (X-OME-Signature 서명 검증) -->
+				<SecretKey>${env:OME_WEBHOOK_SECRET:ome-webhook-secret}</SecretKey>
+				<Timeout>3000</Timeout>
+				<Enables>
+					<Providers>rtmp</Providers>
+				</Enables>
+			</AdmissionWebhooks>
+
+			<Applications>
+				<Application>
+					<!-- OBS 서버: rtmp://localhost/live , 스트림 키: {채널코드}?key={스트림키} -->
+					<Name>live</Name>
+					<Type>live</Type>
+					<OutputProfiles>
+						<OutputProfile>
+							<Name>abr</Name>
+							<OutputStreamName>${OriginStreamName}</OutputStreamName>
+
+							<!--
+							  재생 목록 "master" : 원본(source) / 720p / 480p 화질 선택 (플레이어가 회선 상태에 따라 자동 전환)
+							  화질마다 WebRTC 용(Opus 음성)과 LL-HLS 용(AAC 음성, hls_*)을 둔다. (렌더링 이름은 서로 달라야 함)
+							  각 프로토콜은 지원하는 코덱의 항목만 골라 쓴다 (WebRTC: H.264+Opus, LL-HLS: H.264+AAC).
+							-->
+							<Playlist>
+								<Name>master</Name>
+								<FileName>master</FileName>
+								<Options>
+									<WebRtcAutoAbr>true</WebRtcAutoAbr>
+								</Options>
+								<Rendition>
+									<Name>source</Name>
+									<Video>bypass_video</Video>
+									<Audio>opus_audio</Audio>
+								</Rendition>
+								<Rendition>
+									<Name>720p</Name>
+									<Video>video_720</Video>
+									<Audio>opus_audio</Audio>
+								</Rendition>
+								<Rendition>
+									<Name>480p</Name>
+									<Video>video_480</Video>
+									<Audio>opus_audio</Audio>
+								</Rendition>
+								<Rendition>
+									<Name>hls_source</Name>
+									<Video>bypass_video</Video>
+									<Audio>aac_audio</Audio>
+								</Rendition>
+								<Rendition>
+									<Name>hls_720p</Name>
+									<Video>video_720</Video>
+									<Audio>aac_audio</Audio>
+								</Rendition>
+								<Rendition>
+									<Name>hls_480p</Name>
+									<Video>video_480</Video>
+									<Audio>aac_audio</Audio>
+								</Rendition>
+							</Playlist>
+
+							<Encodes>
+								<!-- 원본 그대로 (OBS 설정의 B-프레임 0 필수: WebRTC 는 B-프레임 미지원) -->
+								<Video>
+									<Name>bypass_video</Name>
+									<Bypass>true</Bypass>
+								</Video>
+								<!-- 화질별 변환 (CPU 사용). PC 가 버거우면 아래 두 개와 Playlist 의 720p/480p 를 지우세요 -->
+								<Video>
+									<Name>video_720</Name>
+									<Codec>h264</Codec>
+									<Width>1280</Width>
+									<Height>720</Height>
+									<Bitrate>2500000</Bitrate>
+									<Framerate>30</Framerate>
+									<Preset>faster</Preset>
+								</Video>
+								<Video>
+									<Name>video_480</Name>
+									<Codec>h264</Codec>
+									<Width>854</Width>
+									<Height>480</Height>
+									<Bitrate>1000000</Bitrate>
+									<Framerate>30</Framerate>
+									<Preset>faster</Preset>
+								</Video>
+								<!-- LL-HLS·녹화용 AAC (OBS 가 AAC 면 변환 없이 통과) -->
+								<Audio>
+									<Name>aac_audio</Name>
+									<Codec>aac</Codec>
+									<Bitrate>128000</Bitrate>
+									<Samplerate>48000</Samplerate>
+									<Channel>2</Channel>
+									<BypassIfMatch>
+										<Codec>eq</Codec>
+									</BypassIfMatch>
+								</Audio>
+								<!-- WebRTC 용 Opus -->
+								<Audio>
+									<Name>opus_audio</Name>
+									<Codec>opus</Codec>
+									<Bitrate>128000</Bitrate>
+									<Samplerate>48000</Samplerate>
+									<Channel>2</Channel>
+									<BypassIfMatch>
+										<Codec>eq</Codec>
+									</BypassIfMatch>
+								</Audio>
+							</Encodes>
+						</OutputProfile>
+					</OutputProfiles>
+
+					<Providers>
+						<RTMP />
+					</Providers>
+
+					<Publishers>
+						<AppWorkerCount>1</AppWorkerCount>
+						<StreamWorkerCount>8</StreamWorkerCount>
+						<WebRTC>
+							<Timeout>30000</Timeout>
+							<Rtx>false</Rtx>
+							<Ulpfec>false</Ulpfec>
+							<JitterBuffer>false</JitterBuffer>
+						</WebRTC>
+						<LLHLS>
+							<OriginMode>true</OriginMode>
+							<ChunkDuration>0.5</ChunkDuration>
+							<!-- PartHoldBack 은 ChunkDuration 의 3배 이상 -->
+							<PartHoldBack>1.5</PartHoldBack>
+							<SegmentDuration>6</SegmentDuration>
+							<SegmentCount>10</SegmentCount>
+							<CrossDomains>
+								<Url>*</Url>
+							</CrossDomains>
+						</LLHLS>
+						<!-- 녹화: viewer-api 가 방송마다 REST API(:startRecord)로 경로를 지정해 시작한다 (아래는 기본값) -->
+						<FILE>
+							<FilePath>/opt/ovenmediaengine/records/${Application}/${Stream}/${StartTime:YYYYMMDDhhmmss}.mp4</FilePath>
+							<InfoPath>/opt/ovenmediaengine/records/${Application}/${Stream}/${StartTime:YYYYMMDDhhmmss}.xml</InfoPath>
+						</FILE>
+					</Publishers>
+				</Application>
+			</Applications>
+		</VirtualHost>
+	</VirtualHosts>
+</Server>

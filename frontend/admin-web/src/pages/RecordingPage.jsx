@@ -15,7 +15,7 @@ const STATUS = { NONE: '녹화 안 함', RECORDING: '녹화 중', READY: '다시
 
 /**
  * 관리자 > VOD > 방송 녹화 관리
- * OBS 송출 1회 = 방송 1건. SRS DVR 이 녹화한 mp4 + 그 시간대 채팅/퀴즈로 다시보기 제공.
+ * OBS 송출 1회 = 방송 1건. OME 가 녹화한 mp4 + 그 시간대 채팅/퀴즈로 다시보기 제공.
  */
 export default function RecordingPage() {
   const [channels, setChannels] = useState([])
@@ -37,7 +37,7 @@ export default function RecordingPage() {
   }, [channelId])
 
   const remove = async (id) => {
-    if (!confirm('방송 이력을 삭제할까요? (녹화 파일은 SRS 폴더에 남습니다)')) return
+    if (!confirm('방송 이력을 삭제할까요? (녹화 파일은 infra/ome/records 폴더에 남습니다)')) return
     try {
       await api.broadcasts.remove(id)
       load()

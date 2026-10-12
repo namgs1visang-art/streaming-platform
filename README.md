@@ -1,12 +1,13 @@
 # Streaming Platform
 
-OBS 송출 → SRS(미디어 서버) → HLS 시청 + 실시간 채팅/퀴즈 + 녹화(VOD)
+OBS 송출 → OvenMediaEngine(미디어 서버) → WebRTC / LL-HLS 시청(화질 자동 전환) + 실시간 채팅/퀴즈 + 녹화(VOD)
 
 ```
-[OBS] ─RTMP─▶ [SRS] ─HLS─▶ [viewer-web]
-                │ on_publish / on_unpublish / on_dvr
-                ▼
+[OBS] ─RTMP─▶ [OME] ─WebRTC(1초 미만) / LL-HLS(2~5초), 원본·720p·480p─▶ [viewer-web (OvenPlayer)]
+                │ AdmissionWebhooks(송출 시작/종료)      ▲ REST API :8081 (상태·강제 종료·녹화)
+                ▼                                         │
           [viewer-api] ── PostgreSQL ── [admin-api] ◀── [admin-web]
+                │  녹화 mp4: infra/ome/records ─▶ [recordings(nginx) :8080] ─▶ 다시보기
                 │
              Redis ◀── [chat-server] ◀─WebSocket─▶ [viewer-web 채팅]
 ```
@@ -15,13 +16,13 @@ OBS 송출 → SRS(미디어 서버) → HLS 시청 + 실시간 채팅/퀴즈 + 
 
 | 경로 | 역할 | 포트 |
 |---|---|---|
-| `infra/` | PostgreSQL, Redis, MinIO, SRS (docker-compose) | 5432, 6379, 9000/9001, 1935/1985/8080 |
+| `infra/` | PostgreSQL, Redis, OvenMediaEngine, 녹화 파일 서버(nginx), MinIO(선택) (docker-compose) | 5432, 6379, 1935/3333/3478/8081 + 10000-10004/udp, 8080, 9000/9001 |
 | `backend/core` | 공통 엔티티·Repository·서비스 (채널, 스케줄, 방송/녹화, 채팅 로그·스티커, 퀴즈) + 채팅 이벤트 발행 | - |
 | `backend/admin-api` | 관리자 API (채널/스케줄, 채팅·스티커, 퀴즈·편성 퀴즈, 방송 녹화) | 8091 |
-| `backend/viewer-api` | 시청자 API(채널, 편성표, 채팅 초기값, 스티커, 퀴즈 응답, 다시보기) + SRS 훅(스트림키 인증, 방송 회차·녹화) | 8092 |
+| `backend/viewer-api` | 시청자 API(채널, 편성표, 채팅 초기값, 스티커, 퀴즈 응답, 다시보기) + OME AdmissionWebhooks(스트림키 인증, 방송 회차) + OME 녹화 시작/완료 확인 | 8092 |
 | `backend/chat-server` | WebSocket(STOMP) 채팅·스티커 + 얼리기/도배 검사 + 채팅 로그 일괄 저장 + Redis Pub/Sub + 시청자 수 | 8093 |
 | `frontend/admin-web` | 관리자 화면 (React) | 5173 |
-| `frontend/viewer-web` | 시청자 화면 (React, hls.js) | 5174 |
+| `frontend/viewer-web` | 시청자 화면 (React, OvenPlayer) | 5174 |
 
 ## 실행 순서
 
@@ -53,15 +54,15 @@ cd frontend/viewer-web && npm install && npm run dev   # http://localhost:5174
    - 서비스: **사용자 지정**
    - 서버: `rtmp://localhost/live`
    - 스트림 키: 표의 `channel1?key=...` 값 (클릭하면 복사)
-   - (지연 단축) 설정 → 출력 → 출력 방식 **고급** → 스트리밍: 데이터율 제어 `CBR`, **키프레임 간격 `1`초**, CPU 사용량 `veryfast`, 튜닝 `zerolatency`
-   - (WebRTC 재생) **B-프레임 0** — x264 는 프로파일 `baseline`, NVENC 는 최대 B-프레임 `0`. B-프레임이 있으면 WebRTC 화면이 끊깁니다.
-     > 라이브 재생은 WebRTC(WHEP, UDP 8000, 지연 1초 미만) 우선, 실패하면 HLS 로 자동 전환됩니다. 시청 URL 에 `?hls` 를 붙이면 HLS 로만 재생.
-     > 다른 기기(폰 등)에서 WebRTC 로 보려면 `CANDIDATE=<PC의 LAN IP> docker compose up -d srs`.
-     > 키프레임 간격이 0(자동)이면 SRS 가 HLS 세그먼트를 수 초 단위로밖에 못 잘라 지연이 10초 이상으로 늘어납니다.
+   - 설정 → 출력 → 출력 방식 **고급** → 스트리밍: 데이터율 제어 `CBR`, **키프레임 간격 `1`초**, CPU 사용량 `veryfast`, 튜닝 `zerolatency`
+   - **B-프레임 0 (필수)** — x264 는 프로파일 `baseline`, NVENC 는 최대 B-프레임 `0`. B-프레임이 있으면 WebRTC 원본 화질이 끊깁니다 (모니터링에 ⚠ 표시).
+     > 라이브 재생은 OvenPlayer 가 WebRTC(UDP 10000-10004, 지연 1초 미만) 우선, 실패하면 LL-HLS 로 자동 전환합니다. 시청 URL 에 `?hls` 를 붙이면 LL-HLS 로만 재생.
+     > 화질은 원본/720p/480p 중 회선에 따라 자동 전환되고, 플레이어 톱니바퀴에서 고를 수 있습니다. 720p·480p 변환은 CPU 를 쓰므로 PC 가 버거우면 `infra/ome/Server.xml` 의 해당 항목을 지우세요.
+     > 다른 기기(폰 등)에서 WebRTC 로 보려면 `OME_HOST_IP=<PC의 LAN IP> docker compose up -d ome`.
 3. 방송 시작 → 관리자 화면 상태가 `LIVE` 로 변경
 4. 시청자(5174) → 채널 클릭 → 재생 + 채팅
 
-> 키가 틀리면 SRS가 송출을 끊고 viewer-api 로그에 `송출 거부` 가 찍힙니다.
+> 키가 틀리면 OME 가 송출을 끊고 viewer-api 로그에 `송출 거부` 가 찍힙니다.
 > 편성 시간에만 송출을 허용하려면 viewer-api `app.publish.require-schedule: true`.
 
 ### 5. 채팅 고도화 테스트
@@ -77,16 +78,16 @@ cd frontend/viewer-web && npm install && npm run dev   # http://localhost:5174
 ### 6. 녹화 → 다시보기 테스트
 1. 스케줄 관리에서 지금 시간대 스케줄을 **녹화 체크**해서 등록 (편성 없이 송출하면 `app.recording.default-enabled` 따름)
 2. OBS 송출 → 채팅 몇 개 → 송출 종료
-3. SRS 가 `infra/srs/dvr/live/{채널코드}/*.mp4` 저장 → `on_dvr` 훅 → 방송 회차에 연결
+3. 송출 시작 시 viewer-api 가 OME 에 녹화를 요청 → 종료되면 `infra/ome/records/live/{채널코드}/{방송ID}.mp4` (+ 완료 표시 .xml) 생성 → viewer-api 가 5초마다 확인해 방송 회차에 연결
 4. 관리자 → VOD → **방송 녹화 관리** 에서 `다시보기 가능` 확인 → [다시보기]
 5. 시청자(5174) → **다시보기** 메뉴: 영상 재생 위치에 맞춰 그 방송 시간대의 채팅/퀴즈가 다시 흐름
 
-> 녹화 OFF 스케줄도 SRS 는 녹화합니다(dvr_apply all). viewer-api `app.recording.dvr-host-dir` 에 `infra/srs/dvr` 의 PC 경로를 넣으면 녹화 OFF 방송 파일은 자동 삭제되고, 파일 크기도 기록됩니다.
+> 녹화 OFF 방송은 아예 녹화하지 않습니다. 녹화 파일은 recordings(nginx) `http://localhost:8080/dvr/...` 로 재생됩니다.
 
 ### 8. 모니터링 (방송 통합 통제)
 관리자 → LIVE → **모니터링**: 전체 채널 상태 카드(LIVE, 시청자 수, 방송 시간, 송출 비트레이트, 얼리기/퀴즈 진행 표시)를 3초마다 갱신하고,
 카드를 선택하면 한 화면에서 그 방송을 통제합니다.
-- **방송**: 미리보기, 송출 품질(SRS API 1985: kbps·해상도·코덱), 편성, 녹화 상태, **방송 중지**(송출 잠금 + SRS 강제 종료 + 진행 중 퀴즈 마감 + 시청자 안내), **송출 허용**, 공지
+- **방송**: 미리보기, 송출 품질(OME REST API 8081: kbps·해상도·fps·코덱·B-프레임 경고), 재생 방식 표시(WebRTC/LL-HLS), 편성, 녹화 상태, **방송 중지**(진행 중 퀴즈 마감 + 송출 잠금 + 시청자 안내 + OME 강제 종료), **송출 허용**, 공지
 - **퀴즈/투표**: 진행 중 퀴즈 실시간 집계 + 지금 마감, 이 방송 편성 퀴즈 출제, 문제 은행에서 바로 출제
 - **채팅**: 채팅/스티커 얼리기, 실시간 피드에서 숨김·삭제, 관리자 메시지
 
@@ -121,19 +122,22 @@ curl -X POST http://localhost:8093/api/chat/channel1/events \
 
 ## 단계별 로드맵
 
-- [x] 1. OBS → SRS → HLS 재생
-- [x] 2. 채널 / 스트림키 인증 (on_publish)
+- [x] 1. OBS → OME → WebRTC / LL-HLS 재생 (SRS 에서 전환)
+- [x] 2. 채널 / 스트림키 인증 (OME AdmissionWebhooks, 서명 검증)
 - [x] 3. 스케줄 + 편성표 + 시청 페이지 (기본)
 - [x] 4. 실시간 채팅 기본 (Redis Pub/Sub, 시청자 수)
 - [x] 4-1. 채팅 고도화: 채팅/스티커 얼리기, 스티커 전송, 도배 방지, 메시지 DB 저장, 관리자 메시지 관리(숨김/삭제/관리자 메시지/이력 검색)
 - [ ] 4-2. 로그인 연동, 사용자 제재(채팅 사용자 관리), 금칙어
-- [x] 5. 녹화 → 다시보기: on_publish/on_unpublish 방송 회차, on_dvr 녹화 연결, 방송 시간대 채팅·퀴즈 동기 재생
+- [x] 5. 녹화 → 다시보기: 송출 시작/종료 방송 회차, OME 녹화(REST API) 연결, 방송 시간대 채팅·퀴즈 동기 재생
 - [ ] 5-1. 녹화 파일 MinIO 업로드 → VOD 콘텐츠 등록, 카테고리
 - [x] 6. 퀴즈/투표: 문제은행, 편성 퀴즈, 출제/마감, 1인 1회 응답, Redis 실시간 집계
-- [x] 7. 모니터링: SRS HTTP API(1985) 기반 상태 + 방송 통합 통제(방송 중지, 공지, 퀴즈, 채팅)
-- [ ] 8. 트랜스코딩 프로파일(FFmpeg), 패키징, CDN, 관리자 계정/권한(Spring Security)
+- [x] 7. 모니터링: OME REST API(8081) 기반 상태 + 방송 통합 통제(방송 중지, 공지, 퀴즈, 채팅)
+- [x] 8-1. 화질별 변환(원본/720p/480p ABR, OME 내장 인코더)
+- [ ] 8. CDN, 관리자 계정/권한(Spring Security)
 
 ## 참고
-- SRS DVR 은 모든 송출을 녹화하고, 스케줄의 `recordEnabled` 에 따라 다시보기 등록 여부를 정합니다. (녹화 파일은 SRS http_server `http://localhost:8080/dvr/...` 로 재생)
-- SRS 관리 콘솔: http://localhost:8080/console/ , API: http://localhost:1985/api/v1/streams/
-- MinIO 콘솔: http://localhost:9001 (minioadmin / minioadmin)
+- 미디어 서버 설정: `infra/ome/Server.xml` (OvenMediaEngine v0.20.5, AGPL-3.0). 바꾼 뒤 `docker restart sp-ome`
+- 재생 주소: WebRTC `ws://localhost:3333/live/{채널코드}/master`, LL-HLS `http://localhost:3333/live/{채널코드}/master.m3u8`
+- OME REST API: `http://localhost:8081/v1/vhosts/default/apps/live/streams` (헤더 `Authorization: Basic base64(ome-access-token)`)
+- 비밀값(`ome-access-token`, `ome-webhook-secret`)은 docker-compose 와 admin-api / viewer-api `application.yml` 의 `app.ome.*` 가 같아야 합니다.
+- MinIO 콘솔: http://localhost:9001 (minioadmin / minioadmin, `docker compose --profile storage up -d`)

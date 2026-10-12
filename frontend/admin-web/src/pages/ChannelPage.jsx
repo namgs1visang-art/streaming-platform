@@ -65,7 +65,7 @@ export default function ChannelPage() {
         <thead>
           <tr>
             <th>상태</th><th>코드</th><th>채널명</th>
-            <th>OBS 서버</th><th>OBS 스트림 키</th><th>재생 URL</th><th></th>
+            <th>OBS 서버</th><th>OBS 스트림 키</th><th>재생 URL (LL-HLS)</th><th></th>
           </tr>
         </thead>
         <tbody>

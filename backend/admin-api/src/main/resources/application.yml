@@ -26,8 +26,11 @@ app:
   cors:
     allowed-origins: http://localhost:5173
   media:
-    rtmp-base-url: rtmp://localhost/live      # OBS "서버" 칸에 들어갈 값
-    hls-base-url: http://localhost:8080/live  # 시청 URL
-    http-base-url: http://localhost:8080      # SRS http_server (녹화 mp4: {http-base-url}/dvr/...)
-  srs:
-    api-url: http://localhost:1985            # SRS HTTP API (스트림 상태 조회, 송출 강제 종료)
+    rtmp-base-url: rtmp://localhost/live         # OBS "서버" 칸에 들어갈 값 (OME RTMP)
+    webrtc-base-url: ws://localhost:3333/live    # OME WebRTC  ({base}/{채널코드}/master)
+    llhls-base-url: http://localhost:3333/live   # OME LL-HLS  ({base}/{채널코드}/master.m3u8)
+    http-base-url: http://localhost:8080         # 녹화 파일 서버 recordings (녹화 mp4: {http-base-url}/dvr/...)
+  ome:
+    api-url: http://localhost:8081               # OME REST API (스트림 상태 조회, 송출 강제 종료, 녹화 종료)
+    access-token: ome-access-token               # docker-compose OME_API_ACCESS_TOKEN 과 같게
+    app: live

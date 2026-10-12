@@ -52,7 +52,7 @@ public class RecordingAdminController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        broadcastService.delete(id); // 이력만 삭제 (SRS 녹화 파일은 그대로)
+        broadcastService.delete(id); // 이력만 삭제 (녹화 파일은 infra/ome/records 에 그대로)
     }
 
     private Item toItem(Broadcast b) {

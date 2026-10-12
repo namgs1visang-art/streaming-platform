@@ -13,8 +13,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * 방송 1회 = OBS 송출 시작(on_publish) ~ 종료(on_unpublish).
- * SRS DVR(dvr_plan session)이 송출 1회를 mp4 1개로 녹화하므로 녹화 단위와 같다.
+ * 방송 1회 = OBS 송출 시작 ~ 종료 (OME AdmissionWebhooks opening ~ closing).
+ * 녹화 ON 이면 방송마다 OME 녹화 작업 1개 → mp4 1개 (OmeRecorder).
  * 다시보기에서 영상 0초 = startedAt, 채팅 오프셋 = 채팅 시각 - startedAt.
  */
 @Getter
@@ -51,7 +51,7 @@ public class Broadcast {
     @Column(nullable = false, length = 20)
     private RecordingStatus recordingStatus;
 
-    /** SRS http_server 기준 상대 경로 (예: dvr/live/channel1/1759800000000.mp4) */
+    /** 녹화 파일 서버(recordings) 기준 상대 경로 (예: dvr/live/channel1/12.mp4) */
     @Column(length = 500)
     private String videoPath;
 

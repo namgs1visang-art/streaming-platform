@@ -70,6 +70,14 @@ public class ChannelService {
         channelRepository.delete(get(id));
     }
 
+    /** 송출 잠금/해제 — 별도 트랜잭션으로 바로 커밋 (방송 중지 시 OME 강제 종료 전에 잠금이 보여야 OBS 재접속을 막는다) */
+    @Transactional
+    public Channel lockPublish(Long id, boolean locked) {
+        Channel channel = get(id);
+        channel.lockPublish(locked);
+        return channel;
+    }
+
     @Transactional
     public void markLive(Channel channel) {
         channelRepository.findById(channel.getId()).ifPresent(Channel::goLive);

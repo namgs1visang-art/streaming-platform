@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { useChatSocket, VIEWER_URL } from '../lib/useChatSocket.js'
-import LivePreview from '../components/LivePreview.jsx'
+import OmePlayer from '../components/OmePlayer.jsx'
 import { LiveFeed } from './ChatMessagePage.jsx'
 import { Bars } from './QuizSchedulePage.jsx'
 
@@ -137,26 +137,37 @@ function ControlRoom({ channelId, onChanged, now }) {
 /** 1열: 방송 미리보기 + 상태 + 방송 중지/허용 + 공지 */
 function BroadcastPanel({ c, now, run }) {
   const [notice, setNotice] = useState('')
+  const [protocol, setProtocol] = useState(null)
   const live = c.status === 'LIVE'
+  const s = c.stream
   const overlayUrl = `${VIEWER_URL}/overlay/${c.code}/quiz`
 
   const stop = () => {
     const msg = prompt('방송을 중지합니다. 시청자에게 보낼 안내 문구 (비워두면 기본 문구)\n※ 송출이 잠겨 OBS 가 다시 연결해도 거부됩니다.', '')
     if (msg === null) return
-    run(() => api.monitor.stop(c.id, msg), (r) => (r.kicked ? '방송을 중지했습니다.' : '송출을 잠갔습니다. (SRS 연결 실패 — OBS 에서도 송출을 종료해 주세요)'))
+    run(() => api.monitor.stop(c.id, msg), (r) => (r.kicked ? '방송을 중지했습니다.' : '송출을 잠갔습니다. (OME 연결 실패 — OBS 에서도 송출을 종료해 주세요)'))
   }
 
   return (
     <div className="panel">
       <div className="panel-title">방송</div>
-      {live ? <LivePreview code={c.code} hlsSrc={c.playbackUrl} /> : <div className="preview off">{c.publishLocked ? '송출 잠김 (방송 중지됨)' : '방송 중이 아닙니다'}</div>}
+      {live ? (
+        <div className="preview-wrap">
+          <OmePlayer webrtcUrl={c.webrtcUrl} hlsUrl={c.playbackUrl} onProtocol={setProtocol} />
+          <span className="preview-mode">{protocol ?? '연결 중'}</span>
+        </div>
+      ) : <div className="preview off">{c.publishLocked ? '송출 잠김 (방송 중지됨)' : '방송 중이 아닙니다'}</div>}
 
       <dl className="kv">
         <dt>상태</dt><dd><span className={`badge ${live ? 'live' : ''}`}>{c.status}</span>{c.publishLocked && <span className="badge st-DELETED">송출 잠금</span>}</dd>
         <dt>시청자</dt><dd>{c.viewerCount.toLocaleString()}명</dd>
         <dt>방송 시간</dt><dd>{live ? elapsed(c.liveStartedAt, now) : '-'}</dd>
         <dt>송출 품질</dt>
-        <dd>{c.stream ? `${c.stream.kbpsIn.toLocaleString()} kbps · ${c.stream.width ?? '?'}×${c.stream.height ?? '?'} · ${c.stream.videoCodec ?? ''}/${c.stream.audioCodec ?? ''}` : '-'}</dd>
+        <dd>
+          {s ? `${s.kbpsIn.toLocaleString()} kbps · ${s.width ?? '?'}×${s.height ?? '?'}${s.framerate ? ` ${Math.round(s.framerate)}fps` : ''} · ${s.videoCodec ?? ''}/${s.audioCodec ?? ''}` : '-'}
+          {s?.bframes && <div className="error small">⚠ B-프레임 감지 — WebRTC 화면이 끊길 수 있습니다 (OBS 프로파일 baseline / B-프레임 0)</div>}
+        </dd>
+        <dt>미디어 접속</dt><dd>{s ? `${s.mediaConnections.toLocaleString()}개 (WebRTC·LL-HLS)` : '-'}</dd>
         <dt>편성</dt><dd>{c.schedule ? `${c.schedule.title} (${hm(c.schedule.startAt)}~${hm(c.schedule.endAt)})` : '없음'}</dd>
         <dt>녹화</dt><dd>{c.broadcast ? REC_LABEL[c.broadcast.recordingStatus] : '-'}</dd>
       </dl>

@@ -16,7 +16,9 @@ public class MonitorDto {
     public record BroadcastInfo(Long id, LocalDateTime startedAt, String recordingStatus) {
     }
 
-    public record StreamInfo(int kbpsIn, String videoCodec, Integer width, Integer height, String audioCodec, int srsClients) {
+    /** OME 입력 스트림 상태. bframes=true 면 WebRTC 재생이 끊길 수 있음 (OBS B-프레임 0 필요) */
+    public record StreamInfo(int kbpsIn, String videoCodec, Integer width, Integer height, Double framerate,
+                             boolean bframes, String audioCodec, int mediaConnections) {
     }
 
     public record QuizInfo(Long pushId, String title, String question, String mode, List<String> options,
@@ -25,7 +27,7 @@ public class MonitorDto {
 
     /** 모니터링 카드 1개 = 채널 1개의 현재 상태 */
     public record ChannelStatus(Long id, String code, String name, String status, LocalDateTime liveStartedAt,
-                                String playbackUrl, long viewerCount,
+                                String playbackUrl, String webrtcUrl, long viewerCount,
                                 boolean chatFrozen, boolean stickerFrozen, boolean publishLocked,
                                 ScheduleInfo schedule, BroadcastInfo broadcast, StreamInfo stream, QuizInfo quiz) {
     }

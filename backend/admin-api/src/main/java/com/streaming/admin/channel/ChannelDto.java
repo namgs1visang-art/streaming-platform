@@ -1,6 +1,7 @@
 package com.streaming.admin.channel;
 
 import com.streaming.core.domain.channel.Channel;
+import com.streaming.core.media.MediaUrls;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -31,15 +32,17 @@ public class ChannelDto {
             String obsServer,
             String obsStreamKey,
             String playbackUrl,
+            String webrtcUrl,
             LocalDateTime createdAt) {
 
-        public static Response of(Channel c, String rtmpBaseUrl, String hlsBaseUrl) {
+        public static Response of(Channel c, MediaUrls urls) {
             return new Response(
                     c.getId(), c.getCode(), c.getName(), c.getDescription(),
                     c.getStatus().name(), c.getLiveStartedAt(),
-                    rtmpBaseUrl,
+                    urls.rtmp(),
                     c.getCode() + "?key=" + c.getStreamKey(),
-                    hlsBaseUrl + "/" + c.getCode() + ".m3u8",
+                    urls.llhls(c.getCode()),
+                    urls.webrtc(c.getCode()),
                     c.getCreatedAt());
         }
     }

@@ -9,5 +9,7 @@ dependencies {
     // 채팅/퀴즈 이벤트를 Redis Pub/Sub 로 발행 (admin-api, viewer-api, chat-server 공용)
     api 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'org.springframework.boot:spring-boot-starter-json'
+    // OME REST API 호출 (RestClient) — 모니터링(admin-api), 녹화 시작/종료(viewer-api)
+    api 'org.springframework:spring-web'
     runtimeOnly 'org.postgresql:postgresql'
 }

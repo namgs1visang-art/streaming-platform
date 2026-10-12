@@ -2,10 +2,10 @@ package com.streaming.viewer.channel;
 
 import com.streaming.core.domain.channel.Channel;
 import com.streaming.core.domain.schedule.Schedule;
+import com.streaming.core.media.MediaUrls;
 import com.streaming.core.service.ChannelService;
 import com.streaming.core.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,13 +22,11 @@ public class ChannelViewerController {
     private final ChannelService channelService;
     private final ScheduleService scheduleService;
     private final ViewerCountReader viewerCountReader;
-
-    @Value("${app.media.hls-base-url}")
-    private String hlsBaseUrl;
+    private final MediaUrls mediaUrls;
 
     public record ChannelView(Long id, String code, String name, String description,
                               String status, LocalDateTime liveStartedAt,
-                              String playbackUrl, long viewerCount,
+                              String playbackUrl, String webrtcUrl, long viewerCount,
                               boolean chatFrozen, boolean stickerFrozen) {
     }
 
@@ -66,7 +64,7 @@ public class ChannelViewerController {
     private ChannelView toView(Channel c) {
         return new ChannelView(c.getId(), c.getCode(), c.getName(), c.getDescription(),
                 c.getStatus().name(), c.getLiveStartedAt(),
-                hlsBaseUrl + "/" + c.getCode() + ".m3u8",
+                mediaUrls.llhls(c.getCode()), mediaUrls.webrtc(c.getCode()),
                 viewerCountReader.get(c.getCode()),
                 c.isChatFrozen(), c.isStickerFrozen());
     }

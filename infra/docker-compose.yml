@@ -34,24 +34,36 @@ services:
     volumes:
       - minio-data:/data
 
-  srs:
-    image: ossrs/srs:6
-    container_name: sp-srs
-    command: ["./objs/srs", "-c", "conf/custom.conf"]
+  # 미디어 서버: OBS(RTMP) 수신 → WebRTC / LL-HLS(화질별) 재생 + 녹화
+  ome:
+    image: ovenmedialabs/ovenmediaengine:v0.20.5
+    container_name: sp-ome
     ports:
-      - "1935:1935"   # RTMP (OBS 송출)
-      - "1985:1985"   # HTTP API (모니터링)
-      - "8080:8080"   # HTTP 서버 (HLS 재생)
-      - "8000:8000/udp" # WebRTC 미디어
+      - "1935:1935"               # RTMP (OBS 송출)
+      - "3333:3333"               # LL-HLS 재생 + WebRTC 시그널링
+      - "3478:3478"               # WebRTC TCP 릴레이 (UDP 가 막힌 환경용)
+      - "10000-10004:10000-10004/udp" # WebRTC 미디어
+      - "8081:8081"               # REST API (모니터링, 강제 종료, 녹화)
     environment:
       # WebRTC 후보 IP: 이 PC 에서만 볼 거면 127.0.0.1, 다른 기기(폰 등)에서 보려면 PC 의 LAN IP
-      #   예) CANDIDATE=192.168.0.10 docker compose up -d srs
-      CANDIDATE: ${CANDIDATE:-127.0.0.1}
+      #   예) OME_HOST_IP=192.168.0.10 docker compose up -d ome
+      OME_HOST_IP: ${OME_HOST_IP:-127.0.0.1}
+      OME_API_ACCESS_TOKEN: ome-access-token   # admin-api / viewer-api app.ome.access-token
+      OME_WEBHOOK_SECRET: ome-webhook-secret   # viewer-api app.ome.webhook-secret
     volumes:
-      - ./srs/srs.conf:/usr/local/srs/conf/custom.conf
-      - ./srs/dvr:/usr/local/srs/objs/nginx/html/dvr
+      - ./ome/Server.xml:/opt/ovenmediaengine/bin/origin_conf/Server.xml:ro
+      - ./ome/records:/opt/ovenmediaengine/records
     extra_hosts:
-      - "host.docker.internal:host-gateway"   # 컨테이너 → 내 PC의 Spring Boot 호출용
+      - "host.docker.internal:host-gateway"   # 컨테이너 → 내 PC의 Spring Boot 호출용 (AdmissionWebhooks)
+
+  # 녹화 파일(mp4) 재생용 정적 서버: http://localhost:8080/dvr/live/{채널코드}/{방송ID}.mp4
+  recordings:
+    image: nginx:1.27-alpine
+    container_name: sp-recordings
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ome/records:/usr/share/nginx/html/dvr:ro
 
 volumes:
   postgres-data:

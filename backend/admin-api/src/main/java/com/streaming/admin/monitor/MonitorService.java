@@ -9,6 +9,9 @@ import com.streaming.core.domain.channel.Channel;
 import com.streaming.core.domain.channel.ChannelStatus;
 import com.streaming.core.domain.quiz.QuizPush;
 import com.streaming.core.domain.schedule.Schedule;
+import com.streaming.core.media.MediaUrls;
+import com.streaming.core.media.OmeApiClient;
+import com.streaming.core.media.OmeRecorder;
 import com.streaming.core.service.BroadcastService;
 import com.streaming.core.service.ChannelService;
 import com.streaming.core.service.QuizService;
@@ -18,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,8 +28,8 @@ import java.util.Map;
 
 /**
  * 실시간 방송 통합 모니터링/통제
- *  상태: 채널 LIVE 여부, 시청자 수(Redis), 송출 품질(SRS API), 편성, 녹화, 진행 중 퀴즈, 얼리기
- *  통제: 방송 중지(송출 잠금 + SRS 강제 종료), 송출 허용, 공지, 퀴즈 바로 출제
+ *  상태: 채널 LIVE 여부, 시청자 수(Redis), 송출 품질(OME REST API), 편성, 녹화, 진행 중 퀴즈, 얼리기
+ *  통제: 방송 중지(송출 잠금 + OME 강제 종료), 송출 허용, 공지, 퀴즈 바로 출제
  *  (채팅 얼리기·메시지 관리·퀴즈 마감은 기존 채팅/퀴즈 API 를 그대로 사용)
  */
 @Slf4j
@@ -39,18 +41,17 @@ public class MonitorService {
     private final ScheduleService scheduleService;
     private final BroadcastService broadcastService;
     private final QuizService quizService;
-    private final SrsApiClient srs;
+    private final OmeApiClient ome;
+    private final OmeRecorder recorder;
+    private final MediaUrls mediaUrls;
     private final StringRedisTemplate redis;
     private final ChatEventPublisher publisher;
-
-    @Value("${app.media.hls-base-url}")
-    private String hlsBaseUrl;
 
     @Value("${app.publish.early-minutes:10}")
     private int earlyMinutes;
 
     public List<MonitorDto.ChannelStatus> channels() {
-        Map<String, SrsApiClient.StreamStat> streams = srs.streams();
+        Map<String, OmeApiClient.StreamStat> streams = ome.streams();
         return channelService.findAll().stream()
                 .map(c -> status(c, streams))
                 .sorted(Comparator.comparing((MonitorDto.ChannelStatus s) -> !"LIVE".equals(s.status()))
@@ -59,38 +60,34 @@ public class MonitorService {
     }
 
     public MonitorDto.Detail detail(Long channelId) {
-        MonitorDto.ChannelStatus st = status(channelService.get(channelId), srs.streams());
+        MonitorDto.ChannelStatus st = status(channelService.get(channelId), ome.streams());
         List<QuizDto.Mapping> quizzes = st.schedule() == null ? List.of()
                 : quizService.findScheduleQuizzes(st.schedule().id()).stream().map(QuizDto.Mapping::of).toList();
         return new MonitorDto.Detail(st, quizzes);
     }
 
     /**
-     * 방송 중지: 송출 잠금(OBS 자동 재접속 차단) → SRS 에서 송출 강제 종료 → 진행 중 퀴즈 마감 → 시청자 공지.
-     * SRS 가 on_unpublish 를 보내 채널 OFFLINE·방송 회차 종료가 되지만, SRS 연결 실패에 대비해 여기서도 처리한다.
+     * 방송 중지: 진행 중 퀴즈 마감 → 송출 잠금 커밋 → 시청자 공지 → OME 송출 강제 종료.
+     * 잠금을 먼저 커밋해야 OBS 가 바로 재접속해도 AdmissionWebhooks 에서 거부된다.
+     * OME 가 closing 웹훅을 보내 채널 OFFLINE·방송 회차 종료가 되지만, OME 연결 실패에 대비해 여기서도 처리한다.
      */
-    @Transactional
     public MonitorDto.StopResult stop(Long channelId, String message) {
-        // 퀴즈 마감을 먼저 (마감 쿼리가 영속성 컨텍스트를 비우므로 채널 변경보다 앞에서)
         quizService.findOpenByChannel(channelId).ifPresent(p -> quizService.closeEarly(p.getId()));
-        Channel channel = channelService.get(channelId);
-        channel.lockPublish(true);
+        Channel channel = channelService.lockPublish(channelId, true);
         String text = message == null || message.isBlank() ? "관리자에 의해 방송이 종료되었습니다." : message.strip();
         publisher.publish(ChatEvent.system(MessageType.SYSTEM, channel.getCode(), text, null));
 
-        boolean kicked = srs.kick(channel.getCode());
+        boolean kicked = ome.kick(channel.getCode());
         channelService.markOffline(channel.getCode());
-        broadcastService.end(channel.getCode());
+        broadcastService.end(channel.getCode()).forEach(recorder::stop);
         log.warn("[monitor] 방송 중지 channel={}, kicked={}", channel.getCode(), kicked);
         return new MonitorDto.StopResult(kicked, status(channelService.get(channelId), Map.of()));
     }
 
     /** 송출 잠금 해제 — 이후 OBS 에서 다시 [방송 시작]하면 송출 가능 */
-    @Transactional
     public MonitorDto.ChannelStatus allowPublish(Long channelId) {
-        Channel channel = channelService.get(channelId);
-        channel.lockPublish(false);
-        return status(channel, srs.streams());
+        Channel channel = channelService.lockPublish(channelId, false);
+        return status(channel, ome.streams());
     }
 
     /** 공지 (채팅창 상단 시스템 메시지, 저장하지 않음) */
@@ -105,7 +102,7 @@ public class MonitorService {
 
     // ─────────────────────────────────────────────
 
-    private MonitorDto.ChannelStatus status(Channel c, Map<String, SrsApiClient.StreamStat> streams) {
+    private MonitorDto.ChannelStatus status(Channel c, Map<String, OmeApiClient.StreamStat> streams) {
         boolean live = c.getStatus() == ChannelStatus.LIVE;
 
         Schedule schedule = scheduleService.findOnAir(c.getId(), earlyMinutes).orElse(null);
@@ -116,9 +113,10 @@ public class MonitorService {
         MonitorDto.BroadcastInfo broadcastInfo = b == null ? null
                 : new MonitorDto.BroadcastInfo(b.getId(), b.getStartedAt(), b.getRecordingStatus().name());
 
-        SrsApiClient.StreamStat s = streams.get(c.getCode());
-        MonitorDto.StreamInfo streamInfo = s == null || !s.publishing() ? null
-                : new MonitorDto.StreamInfo(s.kbpsIn(), s.videoCodec(), s.width(), s.height(), s.audioCodec(), s.clients());
+        OmeApiClient.StreamStat s = streams.get(c.getCode());
+        MonitorDto.StreamInfo streamInfo = s == null ? null
+                : new MonitorDto.StreamInfo(s.kbpsIn(), s.videoCodec(), s.width(), s.height(), s.framerate(),
+                s.bframes(), s.audioCodec(), s.connections());
 
         QuizPush push = live ? quizService.findOpenByChannel(c.getId()).orElse(null) : null;
         MonitorDto.QuizInfo quizInfo = null;
@@ -130,7 +128,7 @@ public class MonitorService {
         }
 
         return new MonitorDto.ChannelStatus(c.getId(), c.getCode(), c.getName(), c.getStatus().name(), c.getLiveStartedAt(),
-                hlsBaseUrl + "/" + c.getCode() + ".m3u8", live ? viewers(c.getCode()) : 0,
+                mediaUrls.llhls(c.getCode()), mediaUrls.webrtc(c.getCode()), live ? viewers(c.getCode()) : 0,
                 c.isChatFrozen(), c.isStickerFrozen(), c.isPublishLocked(),
                 scheduleInfo, broadcastInfo, streamInfo, quizInfo);
     }

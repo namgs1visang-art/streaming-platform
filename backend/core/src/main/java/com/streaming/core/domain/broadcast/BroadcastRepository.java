@@ -20,10 +20,10 @@ public interface BroadcastRepository extends JpaRepository<Broadcast, Long> {
     @Query("select b from Broadcast b where b.channel.code = :code and b.endedAt is null order by b.startedAt desc")
     List<Broadcast> findOpenByChannelCode(@Param("code") String channelCode);
 
-    /** on_dvr 로 들어온 파일을 붙일 대상: 녹화 대기 중인 가장 오래된 방송 */
-    @Query("select b from Broadcast b where b.channel.code = :code and b.videoPath is null " +
-           "and b.recordingStatus = com.streaming.core.domain.broadcast.RecordingStatus.RECORDING order by b.startedAt asc")
-    List<Broadcast> findWaitingRecording(@Param("code") String channelCode);
+    /** 종료됐고 녹화 파일 완료를 기다리는 방송 (OME 녹화 info xml 확인 대상) */
+    @Query("select b from Broadcast b join fetch b.channel where b.recordingStatus = com.streaming.core.domain.broadcast.RecordingStatus.RECORDING " +
+           "and b.videoPath is null and b.endedAt is not null order by b.endedAt asc")
+    List<Broadcast> findPendingRecordings();
 
     /** 종료됐는데 오래도록 녹화 파일이 안 들어온 방송 → FAILED 처리 대상 */
     @Query("select b from Broadcast b where b.recordingStatus = com.streaming.core.domain.broadcast.RecordingStatus.RECORDING " +

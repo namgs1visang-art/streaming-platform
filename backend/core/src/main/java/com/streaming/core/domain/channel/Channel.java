@@ -23,7 +23,7 @@ public class Channel extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** SRS stream 이름으로 사용 (영문/숫자/하이픈) */
+    /** OME stream 이름으로 사용 (영문/숫자/하이픈) */
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 

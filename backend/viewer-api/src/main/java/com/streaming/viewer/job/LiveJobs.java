@@ -1,5 +1,7 @@
 package com.streaming.viewer.job;
 
+import com.streaming.core.domain.broadcast.Broadcast;
+import com.streaming.core.media.OmeRecorder;
 import com.streaming.core.service.BroadcastService;
 import com.streaming.core.service.QuizService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,8 @@ public class LiveJobs {
 
     private final QuizService quizService;
     private final BroadcastService broadcastService;
+    private final OmeRecorder recorder;
+    private final RecordingFileChecker fileChecker;
 
     @Value("${app.recording.stuck-minutes:3}")
     private int stuckMinutes;
@@ -40,10 +44,25 @@ public class LiveJobs {
         }
     }
 
-    /** on_dvr 를 받지 못한 녹화 → FAILED */
+    /** 종료된 방송의 OME 녹화가 끝났으면(info xml 생성) mp4 를 연결 → 다시보기 가능 */
+    @Scheduled(fixedDelay = 5000)
+    public void completeRecordings() {
+        try {
+            for (Broadcast b : broadcastService.findPendingRecordings()) {
+                String code = b.getChannel().getCode();
+                String video = recorder.videoPath(b.getId(), code);
+                fileChecker.completedSize(recorder.infoPath(b.getId(), code), video)
+                        .ifPresent(size -> broadcastService.attachRecording(b.getId(), video, size >= 0 ? size : null));
+            }
+        } catch (Exception e) {
+            log.warn("녹화 완료 확인 실패: {}", e.getMessage());
+        }
+    }
+
+    /** 종료 후 일정 시간 녹화가 완료되지 않은 방송 → FAILED */
     @Scheduled(fixedDelay = 60_000)
     public void stuckRecordings() {
         int n = broadcastService.failStuck(stuckMinutes);
-        if (n > 0) log.warn("[broadcast] 녹화 파일 미수신 {}건 실패 처리", n);
+        if (n > 0) log.warn("[broadcast] 녹화 파일 미완료 {}건 실패 처리", n);
     }
 }

@@ -13,7 +13,7 @@ dist/
 .vscode/
 
 # infra
-infra/srs/dvr/
+infra/ome/records/
 
 .DS_Store
 
