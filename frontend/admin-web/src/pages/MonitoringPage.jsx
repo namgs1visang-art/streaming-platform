@@ -218,8 +218,9 @@ function QuizPanel({ c, scheduleQuizzes, run, reload }) {
   })
 
   const push = (quizId) => run(() => api.monitor.pushQuiz(c.id, quizId), '출제했습니다.')
-  const counts = live?.pushId === quiz?.pushId ? live.counts : quiz?.counts
-  const total = live?.pushId === quiz?.pushId ? live.total : quiz?.total
+  const liveMatches = live && quiz && live.pushId === quiz.pushId
+  const counts = liveMatches ? live.counts : quiz?.counts
+  const total = liveMatches ? live.total : quiz?.total
   const remain = quiz ? Math.max(0, Math.ceil((new Date(quiz.closesAt).getTime() - now) / 1000)) : 0
   const disabled = !isLive || !!quiz
 

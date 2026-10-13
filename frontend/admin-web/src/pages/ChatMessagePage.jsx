@@ -13,6 +13,22 @@ const time = (iso) => (iso ? new Date(iso).toLocaleTimeString('sv-SE') : '')
 const dateTime = (iso) => (iso ? new Date(iso).toLocaleString('sv-SE').slice(0, 19) : '')
 const STATUS_LABEL = { VISIBLE: '노출', HIDDEN: '숨김', DELETED: '삭제' }
 
+// 실시간 피드 표시 속도: 받은 메시지를 대기열에 쌓았다가 ms 마다 1개씩 표시 (0 = 받는 즉시)
+const FEED_SPEEDS = {
+  slow: { label: '느리게', ms: 1000 },
+  normal: { label: '보통', ms: 300 },
+  fast: { label: '빠르게', ms: 0 },
+}
+const SPEED_KEY = 'admin.feedSpeed'
+const loadSpeed = () => {
+  try {
+    const v = localStorage.getItem(SPEED_KEY)
+    return FEED_SPEEDS[v] ? v : 'fast'
+  } catch {
+    return 'fast'
+  }
+}
+
 /** 관리자 > 채팅 관리 > 채팅 메시지 관리 */
 export default function ChatMessagePage() {
   const [rooms, setRooms] = useState([])
@@ -93,7 +109,10 @@ export function LiveFeed({ channelCode, onFreezeChanged }) {
   const [draft, setDraft] = useState('')
   const [autoScroll, setAutoScroll] = useState(true)
   const [error, setError] = useState('')
+  const [speed, setSpeed] = useState(loadSpeed)
+  const [pending, setPending] = useState(0)
   const listRef = useRef(null)
+  const queueRef = useRef([])
 
   const add = (items) =>
     setFeed((f) => {
@@ -101,7 +120,40 @@ export function LiveFeed({ channelCode, onFreezeChanged }) {
       const fresh = items.filter((x) => !seen.has(x.id))
       return fresh.length ? [...f, ...fresh].slice(-MAX_FEED) : f
     })
-  const setStatus = (ids, status) => setFeed((f) => f.map((x) => (ids.includes(x.id) ? { ...x, status } : x)))
+  const flush = () => {
+    if (queueRef.current.length) add(queueRef.current)
+    queueRef.current = []
+    setPending(0)
+  }
+  // 채팅 메시지는 표시 속도에 맞춰 대기열을 거친다 (시스템 안내는 즉시 표시)
+  const enqueue = (m) => {
+    if (FEED_SPEEDS[speed].ms === 0) return add([m])
+    queueRef.current.push(m)
+    setPending(queueRef.current.length)
+  }
+  const setStatus = (ids, status) => {
+    const apply = (x) => (ids.includes(x.id) ? { ...x, status } : x)
+    queueRef.current = queueRef.current.map(apply)
+    setFeed((f) => f.map(apply))
+  }
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SPEED_KEY, speed)
+    } catch {
+      // 저장 불가 환경 (시크릿 모드 등)
+    }
+    const { ms } = FEED_SPEEDS[speed]
+    if (ms === 0) return flush()
+    const t = setInterval(() => {
+      const next = queueRef.current.shift()
+      if (!next) return
+      add([next])
+      setPending(queueRef.current.length)
+    }, ms)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speed])
   const sys = (text, sentAt) => add([{ id: `sys-${Date.now()}-${Math.random()}`, type: 'SYSTEM', content: text, sentAt, status: 'VISIBLE' }])
 
   useEffect(() => {
@@ -121,7 +173,7 @@ export function LiveFeed({ channelCode, onFreezeChanged }) {
       case 'CHAT':
       case 'STICKER':
       case 'ADMIN':
-        add([{ ...m, status: 'VISIBLE' }])
+        enqueue({ ...m, status: 'VISIBLE' })
         break
       case 'SYSTEM':
         sys(m.content, m.sentAt)
@@ -198,6 +250,10 @@ export function LiveFeed({ channelCode, onFreezeChanged }) {
         <label className="check">
           <input type="checkbox" checked={showModerated} onChange={(e) => setShowModerated(e.target.checked)} /> 숨김/삭제 포함
         </label>
+        <select value={speed} onChange={(e) => setSpeed(e.target.value)} title="채팅이 올라가는 속도 (관리자 화면에만 적용)">
+          {Object.entries(FEED_SPEEDS).map(([k, v]) => <option key={k} value={k}>속도: {v.label}</option>)}
+        </select>
+        {pending > 0 && <button className="ghost" onClick={flush}>대기 {pending}개 모두 표시</button>}
         {!autoScroll && <button className="ghost" onClick={() => setAutoScroll(true)}>↓ 최신으로</button>}
       </div>
       {error && <p className="error">{error}</p>}
