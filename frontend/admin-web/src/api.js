@@ -31,6 +31,7 @@ export const api = {
   schedules: {
     list: (from, to) => request('GET', `/api/admin/schedules?from=${from}&to=${to}`),
     create: (data) => request('POST', '/api/admin/schedules', data),
+    update: (id, data) => request('PUT', `/api/admin/schedules/${id}`, data),
     remove: (id) => request('DELETE', `/api/admin/schedules/${id}`),
   },
   chat: {

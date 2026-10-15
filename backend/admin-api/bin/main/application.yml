@@ -1,0 +1,36 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: admin-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/streaming
+    username: streaming
+    password: streaming
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update   # 초기 개발용. 운영 전에는 Flyway로 전환 권장
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+  data:
+    redis:              # 채팅 관리/퀴즈 출제 이벤트 발행 (chat-server 가 구독)
+      host: localhost
+      port: 6379
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  media:
+    rtmp-base-url: rtmp://localhost/live         # OBS "서버" 칸에 들어갈 값 (OME RTMP)
+    webrtc-base-url: ws://localhost:3333/live    # OME WebRTC  ({base}/{채널코드}/master)
+    llhls-base-url: http://localhost:3333/live   # OME LL-HLS  ({base}/{채널코드}/master.m3u8)
+    http-base-url: http://localhost:8080         # 녹화 파일 서버 recordings (녹화 mp4: {http-base-url}/dvr/...)
+  ome:
+    api-url: http://localhost:8081               # OME REST API (스트림 상태 조회, 송출 강제 종료, 녹화 종료)
+    access-token: ome-access-token               # docker-compose OME_API_ACCESS_TOKEN 과 같게
+    app: live

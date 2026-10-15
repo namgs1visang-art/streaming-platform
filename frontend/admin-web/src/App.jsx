@@ -3,6 +3,7 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { MENU } from './menu.js'
 import ChannelPage from './pages/ChannelPage.jsx'
 import SchedulePage from './pages/SchedulePage.jsx'
+import ProgrammingPage from './pages/ProgrammingPage.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import ChatMessagePage from './pages/ChatMessagePage.jsx'
 import StickerPage from './pages/StickerPage.jsx'
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/live/channels" replace />} />
             <Route path="/live/channels" element={<ChannelPage />} />
             <Route path="/live/schedules" element={<SchedulePage />} />
+            <Route path="/live/programming" element={<ProgrammingPage />} />
             <Route path="/live/monitoring" element={<MonitoringPage />} />
             <Route path="/quiz/questions" element={<QuizPage />} />
             <Route path="/quiz/programming" element={<QuizSchedulePage />} />

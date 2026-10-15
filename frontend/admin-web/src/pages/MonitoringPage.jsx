@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import { useChatSocket, VIEWER_URL } from '../lib/useChatSocket.js'
+import { useChatBot } from '../lib/useChatBot.js'
 import OmePlayer from '../components/OmePlayer.jsx'
 import { LiveFeed } from './ChatMessagePage.jsx'
 import { Bars } from './QuizSchedulePage.jsx'
@@ -23,6 +25,7 @@ const hm = (s) => s?.slice(11, 16)
  * 위: 전체 채널 상태 카드 / 아래: 선택한 방송 통제실 (미리보기·방송 중지·공지 | 퀴즈 출제·마감 | 채팅 얼리기·메시지 관리)
  */
 export default function MonitoringPage() {
+  const [searchParams] = useSearchParams()
   const [channels, setChannels] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [error, setError] = useState('')
@@ -42,6 +45,12 @@ export default function MonitoringPage() {
     const t = setInterval(load, POLL_MS)
     return () => clearInterval(t)
   }, [])
+
+  // 스케줄 관리 타임라인에서 넘어온 경우 (?channelId=)
+  useEffect(() => {
+    const id = Number(searchParams.get('channelId'))
+    if (id) setSelectedId(id)
+  }, [searchParams])
 
   const liveCount = channels.filter((c) => c.status === 'LIVE').length
   const totalViewers = channels.reduce((a, c) => a + c.viewerCount, 0)
@@ -272,6 +281,8 @@ function QuizPanel({ c, scheduleQuizzes, run, reload }) {
 
 /** 3열: 채팅 얼리기 + 실시간 채팅 관리 */
 function ChatPanel({ c, run, reload }) {
+  const [botRate, setBotRate] = useState(10)
+  const bot = useChatBot(c.code, botRate)
   const freeze = (data, msg) => run(() => api.chat.freeze(c.id, data), msg)
   return (
     <div className="panel monitor-chat">
@@ -284,7 +295,20 @@ function ChatPanel({ c, run, reload }) {
         <button className={`toggle ${c.stickerFrozen ? 'on' : ''}`} onClick={() => freeze({ stickerFrozen: !c.stickerFrozen }, c.stickerFrozen ? '스티커 허용' : '스티커를 막았습니다.')}>
           {c.stickerFrozen ? '스티커 중지 (해제)' : '스티커 얼리기'}
         </button>
+        <select className="bot-rate" value={botRate} onChange={(e) => setBotRate(Number(e.target.value))} title="채팅봇 전송 속도">
+          {[1, 5, 10, 20, 50, 100].map((r) => <option key={r} value={r}>{r}건/초</option>)}
+        </select>
+        <button className={`toggle bot ${bot.running ? 'on' : ''}`} onClick={bot.running ? bot.stop : bot.start}
+          title="속도 테스트: 봇이 임의 채팅을 보냅니다">
+          {bot.running ? '■ 채팅봇 중지' : '🤖 채팅봇'}
+        </button>
       </div>
+      {(bot.running || bot.sent > 0) && (
+        <div className="muted small">
+          🤖 {bot.running ? `봇 ${bot.bots}개 · ${botRate}건/초 전송 중` : '중지됨'} · 보낸 메시지 {bot.sent.toLocaleString()}건
+          {c.chatFrozen && bot.running && <span className="warn"> (채팅 얼림 상태라 거부됨)</span>}
+        </div>
+      )}
       <LiveFeed channelCode={c.code} onFreezeChanged={reload} />
     </div>
   )

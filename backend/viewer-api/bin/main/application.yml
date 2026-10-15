@@ -1,0 +1,41 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: viewer-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/streaming
+    username: streaming
+    password: streaming
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  cors:
+    allowed-origins: http://localhost:5174
+  media:
+    webrtc-base-url: ws://localhost:3333/live    # OME WebRTC  ({base}/{채널코드}/master)
+    llhls-base-url: http://localhost:3333/live   # OME LL-HLS  ({base}/{채널코드}/master.m3u8)
+    http-base-url: http://localhost:8080         # 녹화 파일 서버 recordings (녹화 mp4: {http-base-url}/dvr/...)
+  ome:
+    api-url: http://localhost:8081               # OME REST API (녹화 시작/종료)
+    access-token: ome-access-token               # docker-compose OME_API_ACCESS_TOKEN 과 같게
+    webhook-secret: ome-webhook-secret           # docker-compose OME_WEBHOOK_SECRET 과 같게 (AdmissionWebhooks 서명 검증)
+    app: live
+  publish:
+    require-schedule: false   # true: 편성된 시간에만 OBS 송출 허용
+    early-minutes: 10         # 시작 몇 분 전부터 송출 허용할지
+  recording:
+    default-enabled: true     # 편성 없이 송출한 방송도 녹화(다시보기)할지
+    stuck-minutes: 3          # 방송 종료 후 이 시간 안에 OME 녹화가 완료되지 않으면 녹화 실패 처리

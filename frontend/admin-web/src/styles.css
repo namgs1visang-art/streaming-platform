@@ -122,6 +122,48 @@ td.options .answer { color: #16a34a; font-weight: 700; }
 .overlay-url { margin-top: 8px; }
 .overlay-url code { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; }
 
+/* ── 편성 관리 ── */
+tr.editing td { background: #eef3ff; }
+
+/* ── 스케줄 관리 (타임라인) ── */
+.tl-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.tl-date { display: flex; align-items: center; gap: 16px; min-width: 210px; }
+.tl-date strong { font-size: 18px; font-weight: 500; }
+button.icon { background: none; color: #374151; font-size: 22px; padding: 0 8px; line-height: 1; }
+.tl-picker { position: relative; }
+.tl-picker input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.tl-search { display: flex; }
+.tl-search select, .tl-search input { padding: 7px 10px; border: 1px solid #d1d5db; font-size: 13px; }
+.tl-search select { border-radius: 6px 0 0 6px; min-width: 100px; background: #fff; }
+.tl-search input { border-left: 0; min-width: 220px; }
+.tl-search button { border-radius: 0 6px 6px 0; background: #1f2937; padding: 7px 12px; }
+
+.tl { display: flex; border: 1px solid #e5e7eb; }
+.tl-left { width: 220px; flex-shrink: 0; border-right: 1px solid #e5e7eb; background: #f8f9fb; }
+.tl-right { flex: 1; min-width: 0; overflow-x: auto; }
+.tl-canvas { position: relative; }
+.tl-head { height: 32px; background: #1f2937; color: #fff; font-size: 13px; font-weight: 700; position: relative; }
+.tl-left .tl-head { display: flex; align-items: center; padding: 0 16px; }
+.tl-hour { position: absolute; top: 0; height: 100%; display: flex; align-items: center; padding-left: 8px;
+  border-left: 1px solid #374151; }
+.tl-ch { height: 80px; border-bottom: 1px solid #e5e7eb; padding: 0 16px; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start; gap: 4px; font-size: 14px; }
+.tl-row { height: 80px; border-bottom: 1px solid #e5e7eb; position: relative;
+  background-image: repeating-linear-gradient(to right, #f1f2f4 0 1px, transparent 1px 150px); }
+.tl-block { position: absolute; top: 8px; bottom: 8px; display: flex; flex-direction: column; justify-content: center;
+  gap: 4px; padding: 0 12px; text-align: left; overflow: hidden; border-radius: 10px;
+  background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+.tl-block:hover { filter: brightness(.97); outline: 2px solid #9ca3af; }
+.tl-block.on-air { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; font-weight: 600; }
+.tl-block.on-air:hover { outline-color: #dc2626; }
+.tl-block-title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-block-time { font-size: 12px; color: #9ca3af; font-weight: 400; white-space: nowrap; }
+.tl-block.on-air .tl-block-time { color: #ef4444; }
+.tl-onair-icon { font-size: 10px; margin-right: 4px; color: #dc2626; }
+.tl-now { position: absolute; top: 32px; bottom: 0; width: 2px; margin-left: -1px; background: #3b6cf6; pointer-events: none; }
+.tl-now-label { position: absolute; bottom: -4px; transform: translateX(-50%); background: #3b6cf6; color: #fff;
+  font-size: 10px; padding: 1px 4px; border-radius: 3px; z-index: 1; }
+
 /* ── 모니터링 ── */
 .mon-title { display: flex; align-items: baseline; gap: 12px; }
 .mon-cards { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
@@ -157,5 +199,8 @@ button.danger-fill { background: #dc2626; }
 .quiz-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .quiz-list button { padding: 4px 10px; font-size: 12px; }
 .monitor-chat .feed-wrap { border: 0; padding: 0; }
+.bot-rate { padding: 5px 6px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+button.toggle.bot { color: #7c3aed; border-color: #c4b5fd; }
+button.toggle.bot.on { background: #7c3aed; color: #fff; border-color: #7c3aed; }
 .monitor-chat .feed { height: 460px; min-height: 0; }
 .panel-title button, .inline-form button, .btn-row button { padding: 6px 12px; font-size: 13px; }
